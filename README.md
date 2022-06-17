@@ -1,23 +1,29 @@
-# Optimisation Implémentation des heuristiques
+# :floppy_disk: Implémentation des heuristiques :floppy_disk:
 
-## Exécution de l'heuristique
+## Données
 
-Premier jeu de données
-```
-python3 main.py 'Score/Instances_de_Test/me_at_the_zoo.in' 'Score/Resultat_Heuristiques/me_at_the_zoo.out'
-```
+`donnees_modeles.py` DataClass des données d'entrées 
 
-Deuxième jeu de données
-```
-python3 main.py 'Score/Instances_de_Test/trending_today.in' 'Score/Resultat_Heuristiques/trending_today.out'
-```
+`lecture_ecriture_fichiers.py` Lecture et Ecriture des fichiers d'entrée et de sortie
 
-Troisième jeu de données
-```
-python3 main.py 'Score/Instances_de_Test/videos_worth_spreading.in' 'Score/Resultat_Heuristiques/videos_worth_spreading.out'
-```
+## Heuristiques
+
+
+`heuristiques.py` Production d'une solution à partir des données lus
+
+
+## Contraintes
+
+`contraintes.py` Verification de la validité de la solution produite par l'heuristique
+
 
 ## Evaluation des résultats
 
+`fonction_objective.py` Application de la fonction objective à maximiser
+
 Score actuel : 1567505
 
+
+## Execution
+
+`main.py` Lancement de l'application & Configuration 
