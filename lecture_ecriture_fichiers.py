@@ -1,82 +1,111 @@
 from donnees_modeles import *
 
-def lecture_fichier(file_path):
-    with open(file_path, 'r') as f:
-        lines = [line.rstrip('\n') for line in f]
-        header = lines[0]
-        [videos, endpoints, requests, cache_servers, cache_server_capacity] = [int(x) for x in header.split(' ')]
-        print('videos {}\n endpoints {} requests {} cache_servers {} cache_server_capacity {}'.format(
-            videos, endpoints, requests, cache_servers, cache_server_capacity
-        ))
+def lecture_fichier_entree(emplacement_fichier):
+    with open(emplacement_fichier, 'r') as entree:
 
-        video_sizes = lines[1]
-        video_list = [Videos(i, int(x)) for (i, x) in enumerate(video_sizes.split(' '))]
+        #Selon le manuel, il s'agit d'un format UNIX, on utilise donc '\n'
+        lignes = [line.rstrip('\n') for line in entree]
 
-        cache_servers = [Cache_Serveur(i, cache_server_capacity) for i in range(cache_servers)]
+        #La première ligne du fichiers contient les nombres de vidéos, endpoint, requetes, cache serveurs et la capacité des caches serveurs
+        [nbre_videos, nbre_endpoints, nbre_requetes, nbre_cache_serveur, capacite_stockage] = [int(x) for x in lignes[0].split(' ')]
 
-        endpoint_list = []
-        # keeps track of the last index, which is needed for the video parsing
-        current_index = 2
-        for i in range(endpoints):
-            # we start from the second line
-            current_endpoint = lines[current_index]
-            [latency_to_datacenter, number_of_connected_caches] = [int(x) for x in current_endpoint.split(' ')]
-            current_index += 1
-            connected_caches = []
-            for connected_cache_line in lines[current_index:(current_index + number_of_connected_caches)]:
-                [cache_id, latency] = [int(x) for x in connected_cache_line.split(' ')]
-                connected_caches.append({
-                    'cache_id': cache_id,
-                    'latency': latency
+        #La deuxième ligne est le poid de chacune des vidéos, on utilise l'espace pour séparer chaque poid
+        videos_liste = [Videos(i, int(x)) for (i, x) in enumerate(lignes[1].split(' '))]
+
+        ########################################
+        # Données sur les endpoints et les caches serveurs
+        ########################################
+
+        #création liste endpoints et cache serveurs
+        endpoints_liste = []
+        cache_serveur_liste = [Cache_Serveur(i, capacite_stockage) for i in range(nbre_cache_serveur)]
+
+        #Bien que la ligne actuel soit renseigné à 2, il s'agit de la troisième ligne dans le fichier
+        ligne_actuel = 2
+
+        #On lit la latence au datacenter (LD) et le nombre de cache auquel est connecté l'endpoint
+        for i in range(nbre_endpoints):
+            endpoint_actuel = lignes[ligne_actuel]
+            [latence_LD, K_nbre_cache_serveur] = [int(x) for x in endpoint_actuel.split(' ')]
+
+            #on incrémente
+            ligne_actuel += 1
+
+            #On ajoute les caches serveur auquel l'endpoint est connecté
+            caches_serveurs_du_endpoint = []
+            for cache_serveur_actuel in lignes[ligne_actuel:(ligne_actuel + K_nbre_cache_serveur)]:
+                [cache_serveur_ID, latence_Lc] = [int(x) for x in cache_serveur_actuel.split(' ')]
+                caches_serveurs_du_endpoint.append({
+                    'id_cache_serveur': cache_serveur_ID,
+                    'latenceLc': latence_Lc
                 })
-                current_index += 1
 
-            endpoint = Endpoints(i, latency_to_datacenter, connected_caches)
+                #On incrémente
+                ligne_actuel += 1
 
-            for connected_cache in connected_caches:
-                cache_servers[connected_cache['cache_id']].append_endpoint(endpoint)
+            #On créé l'objet Endpoint
+            endpoint = Endpoints(i, latence_LD, caches_serveurs_du_endpoint)
 
-            endpoint_list.append(endpoint)
+            for caches_serveur in caches_serveurs_du_endpoint:
+                cache_serveur_liste[caches_serveur['id_cache_serveur']].ajout_endpoint(endpoint)
 
-        request_list = []
-        for request_line in lines[current_index:]:
-            [video_id, endpoint_id, number_of_requests] = [int(x) for x in request_line.split(' ')]
-            request = Requetes(video_id, endpoint_id, number_of_requests)
-            video = video_list[video_id]
-            if video.size <= cache_server_capacity:
-                video.append_request(request)
-            endpoint_list[endpoint_id].append_request(request)
-            request_list.append(request)
+            endpoints_liste.append(endpoint)
 
-        # normalize endpoints latency to datacenter
-        print('normalize endpoints')
-        latency_sum = sum([endpoint.latency_to_datacenter for endpoint in endpoint_list])
-        for endpoint in endpoint_list:
-            endpoint.normalize_latency(latency_sum)
+        ########################################
+        # Données sur les requetes des vidéos
+        ########################################
 
-        # normalize videos
-        print('normalize videos')
-        videos_size_sum = sum([video.size for video in video_list])
-        for video in video_list:
-            video.normalize_size(videos_size_sum)
+        #Création de la liste de requêtes
+        requetes_liste = []
 
-        # normalize popularity of videos
-        print('normalize requests')
-        request_sum = sum([request.number_of_requests for request in request_list])
-        for request in request_list:
-            request.normalize_number_of_requests(request_sum)
-        print('finished normalizing')
+        for requete_actuel in lignes[ligne_actuel:]:
+            [video_id, endpoint_id, nbre_de_demandes] = [int(x) for x in requete_actuel.split(' ')]
 
-        return DonneesLus(cache_server_capacity,video_list,endpoint_list,cache_servers,request_list)
+            #Création objet Requete
+            requete = Requetes(video_id, endpoint_id, nbre_de_demandes)
+            video = videos_liste[video_id]
+
+            #Sélectionner uniquement les vidéos qui peuvent rentrer dans un cache serveur à cette étape
+            #permet de ne pas avoir à copie colle cette condition dans toute les heuristiques
+            if video.poid <= capacite_stockage:
+                video.ajout_requete(requete)
+            endpoints_liste[endpoint_id].ajout_requete(requete)
+            requetes_liste.append(requete)
 
 
+        return DonneesEntrees(nbre_videos,
+                                nbre_endpoints,
+                                nbre_requetes,
+                                nbre_cache_serveur,
+                                capacite_stockage,
+                                videos_liste,
+                                endpoints_liste,
+                                cache_serveur_liste,
+                                requetes_liste)
+
+def lecture_fichier_sortie(emplacement_fichier):
+    with open(emplacement_fichier) as f:
+        content = f.readlines()
+    N = int(content[0])
+    cacheServers = []
+    line = 1
+    for x in range(0, N):
+        cacheSsummary = content[line].split(" ")
+        Cs = CacheServer(int(cacheSsummary[0]))
+        cacheSsummary = cacheSsummary[1:]
+        for y in cacheSsummary:
+            Cs.addVideo(int(y))
+        cacheServers.append(Cs)
+        line = line + 1
 
 
+def ecriture_fichier_sortie(cache_serveur_liste, emplacement_sortie):
+    print("\n")
+    cache_serveurs_rempli = [cache_serveur for cache_serveur in cache_serveur_liste if len(cache_serveur.videos) > 0]
 
-def ecriture_fichier(cache_servers, filename):
-    cache_server_we_use = [cache_server for cache_server in cache_servers if len(cache_server.videos) > 0]
-    with open(filename, 'w') as file_out:
-        file_out.write('{}\n'.format(len(cache_server_we_use)))
-        for cache_server in cache_server_we_use:
-            videos_string = ' '.join([str(video.id) for video in cache_server.videos])
-            file_out.write('{} {}\n'.format(cache_server.id, videos_string))
+    with open(emplacement_sortie, 'w') as fichier_sortie:
+        fichier_sortie.write('{}\n'.format(len(cache_serveurs_rempli)))
+        for cache_serveur in cache_serveurs_rempli:
+            videos_dans_le_cache = ' '.join([str(video.id) for video in cache_serveur.videos])
+            #print( cache_serveur.id," : videos [ ",videos_dans_le_cache,  end=" ] \n")
+            fichier_sortie.write('{} {}\n'.format(cache_serveur.id, videos_dans_le_cache))

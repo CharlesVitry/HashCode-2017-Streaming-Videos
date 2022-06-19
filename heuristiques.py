@@ -17,41 +17,73 @@
 #     def __init__(self):
 #         super().__init__("Gloutonne","Gloutonne")
 
-def gloutonne(cache_server_capacity,videos, endpoints, cache_servers, requests ):
-    print('start sorting servers')
-    sorted_cache_servers = sorted(cache_servers, key=lambda c: -c.score(videos))
-    # sorted_cache_servers = cache_servers
-    print('finish sorting servers')
-    # print(sorted_cache_servers, [c.score(videos) for c in sorted_cache_servers])
-    for cache_server in sorted_cache_servers:
-        print('{} {}'.format(cache_server.id, len(cache_servers)), sep=' ', end='', flush=True)
-        video_sum = 0
-        video_score = {}
-        for endpoint in cache_server.endpoints:
-            for request in endpoint.requests:
-                video = videos[request.video_id]
-                result = (
-                    endpoint.latency_to_datacenter_norm - endpoint.get_cache_server_latency_norm(cache_server.id)
-                ) * video.ratio_endpoint_norm(endpoint.id)
-                if request.video_id in video_score:
-                    video_score[request.video_id] += result
+def borne_inferieur():
+    None
+
+def borne_superieur():
+    None
+
+def gloutonne(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_liste, requetes_liste):
+    # On calculs des ratios pour les poids de vidéos, les requetes et les endpoints
+    somme_latence_datacenter = sum([endpoint.latence_datacenter_LD for endpoint in endpoints_liste])
+    for endpoint in endpoints_liste:
+        endpoint.latence_divise_fonction(somme_latence_datacenter)
+
+    somme_poid_videos = sum([video.poid for video in videos_liste])
+    for video in videos_liste:
+        video.poid_divise_fonction(somme_poid_videos)
+
+    somme_requetes = sum([requete.nombre_de_requetes for requete in requetes_liste])
+    for requete in requetes_liste:
+        requete.nombre_de_requetes_divise_fonction(somme_requetes)
+
+    # On ordonne les caches serveurs par leur importance
+    # càd leurs gains possibles par rapport vidéos associés aux requetes de leurs endpoints
+    cache_serveurs_decroissant = sorted(cache_serveur_liste, key=lambda c: -c.importance_du_endpoint(videos_liste))
+
+    # On parcours chacun des caches serveurs
+    for cache_serveur in cache_serveurs_decroissant:
+
+        # On calcul un gain ponderé sur chacune des vidéos pouvant entrer dans le cache serveur
+        gain_videos = {}
+        for endpoint in cache_serveur.endpoints:
+            for requete in endpoint.requetes_liste:
+
+                video = videos_liste[requete.video_id]
+                gain_latence_pondere = (endpoint.latence_datacenter_divise_LD - endpoint.getter_latence_aux_caches_serveurs_divise(cache_serveur.id)) * video.rapport_divise(endpoint.id)
+
+                # Si la vidéo est déjà dans la liste des gains,
+                #on ajoute le gain sinon on affecte le gain actuel.
+                if requete.video_id in gain_videos:
+                    gain_videos[requete.video_id] += gain_latence_pondere
                 else:
-                    video_score[request.video_id] = result
-        video_score_enumerated = video_score.items()
-        sorted_video_score_enumerated = sorted(video_score_enumerated, key=lambda x: -x[1])
+                    gain_videos[requete.video_id] = gain_latence_pondere
+        # On ordonne les gains de vidéos de façon décroissante
+        videos_ordonnees_decroissantes_par_gain = sorted(gain_videos.items(), key=lambda x: -x[1])
 
-        cache_filled_status = 0
-        # print(video_score)
-        for (index, score) in sorted_video_score_enumerated:
-            if score == 0:
+        # On ajouter les vidéos dans le cache serveur tant qu'il y a de la place
+        poid_actuel_cache_serveur = 0
+        for (i, gain) in videos_ordonnees_decroissantes_par_gain:
+
+            # Inutile d'ajouter les gains à 0,
+            # on arrete la boucle dès que la première vidéo à gain à 0 apparait
+            if gain == 0:
                 break
-            video = videos[index]
-            if (cache_filled_status + video.size > cache_server.size):
-                continue
-            cache_filled_status += video.size
-            cache_server.append_video(video)
-            for endpoint in cache_server.endpoints:
-                endpoint.remove_requests(video.id)
+            video = videos_liste[i]
 
-    return cache_servers
+            # On vérifie qu'il y a la place nécessaire pour mettre la vidéo
+            if (poid_actuel_cache_serveur + video.poid <= cache_serveur.capacite):
+
+                # Actualisation du poid occupé du cache serveur
+                poid_actuel_cache_serveur += video.poid
+
+                # Ajout de la vidéo dans la liste du cache serveur
+                cache_serveur.ajout_video(video)
+
+                # On supprimme les requetes correspondantes à la vidéo sur
+                # les endpoints connecté au cache serveur
+                for endpoint in cache_serveur.endpoints:
+                    endpoint.supp_requete(video.id)
+
+    return cache_serveur_liste
 

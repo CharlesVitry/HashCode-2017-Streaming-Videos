@@ -1,122 +1,142 @@
 from dataclasses import dataclass, field
 
-
-@dataclass
-class DonneesLus:
-    capacite_stockage : int
-    videos_liste: list
-    endpoints_liste: list
-    cache_serveur_liste: list
-    requetes_liste: list
-
-
 @dataclass
 class Videos:
     id : int
-    size: int
-    requests : list = field(default_factory=list)
-    popularity_per_endpoint_cache : dict = field(default_factory=dict)
-    popularity_per_endpoint_cache_norm : dict = field(default_factory=dict)
-    size_norm : None = None
+    poid: int
+    requetes_liste : list = field(default_factory=list)
+    efficacite_par_endpoint : dict = field(default_factory=dict)
+    efficacite_divise : dict = field(default_factory=dict)
+    poid_divise : None = None
 
-    def append_request(self, request):
-        self.requests.append(request)
+    def ajout_requete(self, requete):
+        self.requetes_liste.append(requete)
 
-    def ratio_endpoint(self, endpoint_id):
-        return self.popularity_per_endpoint(endpoint_id) / self.size
+    def rapport_par_endpoint(self, endpoint_id):
+        return self.efficacite_par_endpoint_fonction(endpoint_id) / self.poid
 
-    def ratio_endpoint_norm(self, endpoint_id):
-        return self.popularity_per_endpoint_norm(endpoint_id) / self.size
+    def rapport_divise(self, endpoint_id):
+        return self.efficacite_divise_fonction(endpoint_id) / self.poid
 
-    def normalize_size(self, videos_size):
-        self.size_norm = (self.size / videos_size)
+    def poid_divise_fonction(self, poid_videos_total):
+        self.poid_divise = (self.poid / poid_videos_total)
 
-    def popularity(self):
-        return sum([request.number_of_requests for request in self.requests])
+    def efficacite(self):
+        return sum([request.nombre_de_requetes for request in self.requetes_liste])
 
-    def popularity_per_endpoint(self, endpoint_id):
-        if endpoint_id in self.popularity_per_endpoint_cache:
-            return self.popularity_per_endpoint_cache[endpoint_id]
-        result = sum([request.number_of_requests for request in self.requests if request.endpoint_id == endpoint_id])
-        self.popularity_per_endpoint_cache[endpoint_id] = result
-        return result
+    def efficacite_par_endpoint_fonction(self, endpoint_id):
+        if endpoint_id in self.efficacite_par_endpoint:
+            return self.efficacite_par_endpoint[endpoint_id]
+        efficacite = sum([requete.nombre_de_requetes for requete in self.requetes_liste if requete.endpoint_id == endpoint_id])
+        self.efficacite_par_endpoint[endpoint_id] = efficacite
+        return efficacite
 
-    def popularity_per_endpoint_norm(self, endpoint_id):
-        if endpoint_id in self.popularity_per_endpoint_cache_norm:
-            return self.popularity_per_endpoint_cache_norm[endpoint_id]
-        result = sum([request.number_of_requests_norm for request in self.requests if request.endpoint_id == endpoint_id])
-        self.popularity_per_endpoint_cache_norm[endpoint_id] = result
-        return result
+    def efficacite_divise_fonction(self, endpoint_id):
+        if endpoint_id in self.efficacite_divise:
+            return self.efficacite_divise[endpoint_id]
+        efficacite = sum([requete.nombre_de_requetes_divise for requete in self.requetes_liste if requete.endpoint_id == endpoint_id])
+        self.efficacite_divise[endpoint_id] = efficacite
+        return efficacite
 
 
 @dataclass
 class Endpoints:
     id : int
-    latency_to_datacenter : int
-    cache_servers_with_latency : int
-    latency_to_datacenter_norm : None = None
-    requests : list = field(default_factory=list)
-    cache_servers_with_latency_norm : list = field(default_factory=list)
-    get_cache_server_latency_norm_cache : dict = field(default_factory=dict)
+    latence_datacenter_LD : int
+    latence_aux_caches_serveurs : list
+    latence_datacenter_divise_LD : None = None
+    requetes_liste : list = field(default_factory=list)
+    latence_aux_caches_serveurs_divise : list = field(default_factory=list)
+    dict_latence_aux_caches_serveurs_divise : dict = field(default_factory=dict)
 
-    def normalize_latency(self, latency_sum):
-        self.latency_to_datacenter_norm = self.latency_to_datacenter / latency_sum
-        for cache_server in self.cache_servers_with_latency:
-            self.cache_servers_with_latency_norm.append({
-                'cache_id': cache_server['cache_id'],
-                'latency_norm': cache_server['latency'] / latency_sum
+    def latence_divise_fonction(self, latence_somme_totale):
+        self.latence_datacenter_divise_LD = self.latence_datacenter_LD / latence_somme_totale
+        for cache_serveur in self.latence_aux_caches_serveurs:
+            self.latence_aux_caches_serveurs_divise.append({
+                'id_cache_serveur': cache_serveur['id_cache_serveur'],
+                'latenceLc_divise': cache_serveur['latenceLc'] / latence_somme_totale
             })
 
-    def get_cache_server_latency (self, cache_server_id):
-        return [cache_server['latency'] for cache_server in self.cache_servers_with_latency if cache_server_id == cache_server['cache_id']][0]
+    def getter_latence_aux_caches_serveurs (self, cache_serveur_id):
+        return [cache_serveur['latenceLc'] for cache_serveur in self.latence_aux_caches_serveurs if cache_serveur_id == cache_serveur['id_cache_serveur']][0]
 
-    def get_cache_server_latency_norm (self, cache_server_id):
-        if cache_server_id in self.get_cache_server_latency_norm_cache:
-            return self.get_cache_server_latency_norm_cache[cache_server_id]
-        result = [cache_server['latency_norm'] for cache_server in self.cache_servers_with_latency_norm if cache_server_id == cache_server['cache_id']][0]
-        self.get_cache_server_latency_norm_cache[cache_server_id] = result
-        return result
+    def getter_latence_aux_caches_serveurs_divise (self, cache_serveur_id):
+        if cache_serveur_id in self.dict_latence_aux_caches_serveurs_divise:
+            return self.dict_latence_aux_caches_serveurs_divise[cache_serveur_id]
+        efficacite = [cache_serveur['latenceLc_divise'] for cache_serveur in self.latence_aux_caches_serveurs_divise if cache_serveur_id == cache_serveur['id_cache_serveur']][0]
+        self.dict_latence_aux_caches_serveurs_divise[cache_serveur_id] = efficacite
+        return efficacite
 
-    def remove_requests(self, video_id):
-        self.requests = [request for request in self.requests if request.video_id != video_id]
+    def supp_requete(self, video_id):
+        self.requetes_liste = [requete for requete in self.requetes_liste if requete.video_id != video_id]
 
-    def append_request(self, request):
-        self.requests.append(request)
+    def ajout_requete(self, requete):
+        self.requetes_liste.append(requete)
 
 
 @dataclass
 class Cache_Serveur:
     id : int
-    size : int
+    capacite : int
     endpoints : list = field(default_factory=list)
     videos : list = field(default_factory=list)
 
 
-    def append_endpoint(self, endpoint):
-
+    def ajout_endpoint(self, endpoint):
         self.endpoints.append(endpoint)
 
-    def append_video(self, video):
+    def ajout_video(self, video):
         self.videos.append(video)
 
-    def score(self, videos):
-        result = 0
+    def importance_du_endpoint(self, videos):
+        importance = 0
+        # on parcours les endpoints du cache serveurs
         for endpoint in self.endpoints:
-            # print('endpoint {} {}'.format(endpoint.id, len(self.endpoints)), flush=True)
-            videos_ratio = 0
-            for request in endpoint.requests:
-                video = videos[request.video_id]
-                videos_ratio += video.ratio_endpoint_norm(endpoint.id)
-            result += (endpoint.latency_to_datacenter_norm - endpoint.get_cache_server_latency_norm(self.id)) * videos_ratio
-        return result
+            video_rapport = 0
+            # on parcours les vidéos des requetes de ces endpoints
+            for requete in endpoint.requetes_liste:
+                video = videos[requete.video_id]
+                # on somme le gain de ces vidéos
+                video_rapport += video.rapport_divise(endpoint.id)
+
+            # On fait la différence de la latence au datacenter et au cache serveur pondéré par le gain totale des vidéos
+            importance += (endpoint.latence_datacenter_divise_LD - endpoint.getter_latence_aux_caches_serveurs_divise(self.id)) * video_rapport
+        return importance
 
 @dataclass
 class Requetes:
     video_id : int
     endpoint_id : int
-    number_of_requests : int
-    number_of_requests_norm : None = None
+    nombre_de_requetes : int
+    nombre_de_requetes_divise : None = None
 
 
-    def normalize_number_of_requests(self, request_sum):
-        self.number_of_requests_norm = self.number_of_requests / request_sum
+    def nombre_de_requetes_divise_fonction(self, somme_requetes):
+        self.nombre_de_requetes_divise = self.nombre_de_requetes / somme_requetes
+
+@dataclass
+class DonneesEntrees:
+    nbre_videos: int
+    nbre_endpoints: int
+    nbre_requetes: int
+    nbre_cache_serveur: int
+    capacite_stockage : int
+    videos_liste: list[Videos]
+    endpoints_liste: list[Endpoints]
+    cache_serveur_liste: list[Cache_Serveur]
+    requetes_liste: list[Requetes]
+
+    def Nettoyage_donnes(self):
+        None
+    def EfficaciteVideos(self):
+        None
+    def EfficaciteRequetes(self):
+        None
+    def EfficaciteEndpoints(self):
+        None
+
+# Fonction de recherche par ID dans les listes,
+# une structure utilisant des dictionnaires aurait été meilleur
+def objet_par_id(liste, id):
+    objet = [o for o in liste if o.id == id]
+    return objet
