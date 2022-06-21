@@ -84,19 +84,26 @@ def lecture_fichier_entree(emplacement_fichier):
                                 requetes_liste)
 
 def lecture_fichier_sortie(emplacement_fichier):
-    with open(emplacement_fichier) as f:
-        content = f.readlines()
-    N = int(content[0])
-    cacheServers = []
-    line = 1
-    for x in range(0, N):
-        cacheSsummary = content[line].split(" ")
-        Cs = CacheServer(int(cacheSsummary[0]))
-        cacheSsummary = cacheSsummary[1:]
-        for y in cacheSsummary:
-            Cs.addVideo(int(y))
-        cacheServers.append(Cs)
-        line = line + 1
+    with open(emplacement_fichier) as fichier:
+        lignes = fichier.readlines()
+    nbre_caches = int(lignes[0])
+
+    cache_serveur_liste = []
+    ligne = 1
+
+    for compteur in range(0, nbre_caches):
+
+        videos_sur_cache = lignes[ligne].split(" ")
+
+        cache_serveur = Cache_Serveur(int(videos_sur_cache[0]),100)
+
+        videos_sur_cache = videos_sur_cache[1:]
+
+        for video_id in videos_sur_cache:
+            cache_serveur.ajout_video(int(video_id))
+        cache_serveur_liste.append(cache_serveur)
+        ligne = ligne + 1
+    return cache_serveur_liste
 
 
 def ecriture_fichier_sortie(cache_serveur_liste, emplacement_sortie):

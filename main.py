@@ -1,7 +1,10 @@
+#!/usr/bin/env python
+
 from lecture_ecriture_fichiers import *
 from heuristiques import *
 from contraintes import *
 from fonction_objective import *
+
 ########################
 # Configuration
 Emplacement_Entrees = "Instances_de_Test/"
@@ -19,15 +22,19 @@ def exec(Fichier_a_traite):
 
     #Application de l'heuristique
     HeuristiqueGloutonne = gloutonne(
-        donnees_entrees.capacite_stockage,
-        donnees_entrees.videos_liste,
-        donnees_entrees.endpoints_liste,
-        donnees_entrees.cache_serveur_liste,
-        donnees_entrees.requetes_liste
-                                )
+         donnees_entrees.capacite_stockage,
+         donnees_entrees.videos_liste,
+         donnees_entrees.endpoints_liste,
+         donnees_entrees.cache_serveur_liste,
+         donnees_entrees.requetes_liste
+                                 )
+    #BorneInferieur = borne_inferieur(donnees_entrees.cache_serveur_liste)
+
+    #BorneSuperieur = borne_superieur(donnees_entrees.cache_serveur_liste,
+     #                                donnees_entrees.videos_liste)
 
     #Vérification de la validité de la solution produite
-    pass
+    Validite_De_La_Solution(HeuristiqueGloutonne,donnees_entrees.cache_serveur_liste, donnees_entrees.capacite_stockage )
 
     #Ecriture fichier sortie
     #ecriture_fichier_sortie(HeuristiqueGloutonne, Emplacement_Sorties + "resultat.out")
@@ -46,4 +53,13 @@ if __name__ == '__main__':
     #Latence_totale_sauve.append(exec("Instances_de_Test/videos_worth_spreading.in"))
 
     print("Latence totale sauvé sur les 3 fichiers : ", sum(Latence_totale_sauve))
+
+
+    #########
+    # Score
+    # borne inférieur : 0
+    # borne supérieur : 1 878 872
+    # gloutonne : 1 567 505
+    #########
+
 

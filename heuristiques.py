@@ -17,11 +17,20 @@
 #     def __init__(self):
 #         super().__init__("Gloutonne","Gloutonne")
 
-def borne_inferieur():
-    None
+def borne_inferieur(cache_serveur_liste):
+    #On affecte aucune vidéo à chaque cache serveur
+    for cache_serveur in cache_serveur_liste:
+        cache_serveur.videos = []
 
-def borne_superieur():
-    None
+    return cache_serveur_liste
+
+
+def borne_superieur(cache_serveur_liste, videos_liste):
+    # On affecte toutes les vidéos à chaque cache serveur
+    for cache_serveur in cache_serveur_liste:
+        cache_serveur.videos = videos_liste
+
+    return cache_serveur_liste
 
 def gloutonne(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_liste, requetes_liste):
     # On calculs des ratios pour les poids de vidéos, les requetes et les endpoints
@@ -39,7 +48,7 @@ def gloutonne(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_li
 
     # On ordonne les caches serveurs par leur importance
     # càd leurs gains possibles par rapport vidéos associés aux requetes de leurs endpoints
-    cache_serveurs_decroissant = sorted(cache_serveur_liste, key=lambda c: -c.importance_du_endpoint(videos_liste))
+    cache_serveurs_decroissant = sorted(cache_serveur_liste, key=lambda c: -c.importance_du_cache(videos_liste))
 
     # On parcours chacun des caches serveurs
     for cache_serveur in cache_serveurs_decroissant:
@@ -67,8 +76,10 @@ def gloutonne(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_li
 
             # Inutile d'ajouter les gains à 0,
             # on arrete la boucle dès que la première vidéo à gain à 0 apparait
+            
             if gain == 0:
                 break
+              
             video = videos_liste[i]
 
             # On vérifie qu'il y a la place nécessaire pour mettre la vidéo

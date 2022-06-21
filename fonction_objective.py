@@ -19,23 +19,29 @@ def evaluation_heuristique(cache_serveur_liste_solution,requetes_liste,endpoints
         #Liste des caches contenant la vidéo de la requete
         cache_id_avec_video = []
 
+        #On créé une liste des id des caches serveur possèdant la vidéo
         for cacheserveur in cache_serveur_liste_solution:
             if  requete.video_id in [video.id for video in cacheserveur.videos] :
                 #print("ajout")
                 cache_id_avec_video.append(cacheserveur.id)
 
+        #On fait la liste des id de cache serveurs qui dessert le endpoint de la requête
         liste_id_cache_du_endpoint = [i['id_cache_serveur'] for i in (endpoint_requete.latence_aux_caches_serveurs)]
 
         #print(liste_id_cache_du_endpoint, " ; ",cache_id_avec_video)
+
+        #On ajoute la latence des caches serveurs qui dessert le endpoint ET qui ont la vidéo de la requête
         for cache_serveur in liste_id_cache_du_endpoint:
             if (cache_serveur in cache_id_avec_video):
                 latences_possible_video.append(endpoint_requete.getter_latence_aux_caches_serveurs(cache_serveur))
         #print(latences_possible_video)
 
+        #On calcul la latence sauvé par différence à la latence au cache serveur
+        
         minimum = min(latences_possible_video)
         latence_sauve = latence_datacenter_LD - minimum
-        somme_nombre_requete = somme_nombre_requete + requete.nombre_de_requetes
-        latence_sauve_pondere = latence_sauve_pondere + requete.nombre_de_requetes * latence_sauve
+        somme_nombre_requete += requete.nombre_de_requetes
+        latence_sauve_pondere += requete.nombre_de_requetes * latence_sauve
 
     return int(1000 * latence_sauve_pondere / somme_nombre_requete)
 
