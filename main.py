@@ -4,6 +4,7 @@ from lecture_ecriture_fichiers import *
 from heuristiques import *
 from contraintes import *
 from fonction_objective import *
+import time
 
 ########################
 # Configuration
@@ -20,6 +21,7 @@ def exec(Fichier_a_traite):
     #Lecture du fichier d'entrée
     donnees_entrees = lecture_fichier_entree(Fichier_a_traite)
 
+    date_debut_heuristique = time.time()
     #Application de l'heuristique
     HeuristiqueGloutonne = gloutonne(
          donnees_entrees.capacite_stockage,
@@ -28,13 +30,19 @@ def exec(Fichier_a_traite):
          donnees_entrees.cache_serveur_liste,
          donnees_entrees.requetes_liste
                                  )
+
+
+
     #BorneInferieur = borne_inferieur(donnees_entrees.cache_serveur_liste)
 
-    #BorneSuperieur = borne_superieur(donnees_entrees.cache_serveur_liste,
-     #                                donnees_entrees.videos_liste)
+    # BorneSuperieur = borne_superieur(donnees_entrees.cache_serveur_liste,
+    #                                 donnees_entrees.videos_liste)
+    date_fin_heuristique = time.time()
+    print("Temps d'éxécution de  l'heuristique : ",
+          time.strftime("%H:%M:%S", time.gmtime(date_fin_heuristique - date_debut_heuristique)))
 
     #Vérification de la validité de la solution produite
-    Validite_De_La_Solution(HeuristiqueGloutonne,donnees_entrees.cache_serveur_liste, donnees_entrees.capacite_stockage )
+    Validite_De_La_Solution(HeuristiqueGloutonne, donnees_entrees.cache_serveur_liste,     donnees_entrees.capacite_stockage )
 
     #Ecriture fichier sortie
     #ecriture_fichier_sortie(HeuristiqueGloutonne, Emplacement_Sorties + "resultat.out")
@@ -46,13 +54,13 @@ def exec(Fichier_a_traite):
 
 
 if __name__ == '__main__':
-    print("Lancement ! ")
+    print("Lancement ! \n================== \nStatistiques d'Exécution \n")
     Latence_totale_sauve = []
     Latence_totale_sauve.append(exec("Instances_de_Test/me_at_the_zoo.in"))
     #Latence_totale_sauve.append(exec("Instances_de_Test/trending_today.in"))
     #Latence_totale_sauve.append(exec("Instances_de_Test/videos_worth_spreading.in"))
 
-    print("Latence totale sauvé sur les 3 fichiers : ", sum(Latence_totale_sauve))
+    print("\nLatence totale sauvé sur les 3 fichiers : ", (Latence_totale_sauve)," \n================== ")
 
 
     #########
