@@ -1,4 +1,5 @@
 from donnees_modeles import *
+from contraintes import *
 
 # Structure en classes peu utile dans notre cas d'utilisation
 #
@@ -158,3 +159,51 @@ def gloutonne(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_li
 
     return cache_serveur_liste
 
+def trajectory(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_liste, requetes_liste) :
+
+    for endpoint in endpoints_liste:
+        endpoint.requetes_liste_a_traite = endpoint.requetes_liste
+
+
+    # 1ere étape : création d'une solution ne respectant pas la contrainte de capacités
+    for cache_serveur in cache_serveur_liste :
+        gain_videos = {}
+        for endpoint in cache_serveur.endpoints :
+    
+            for requete in endpoint.requetes_liste_a_traite :
+                video = videos_liste[requete.video_id]
+                gain_latence = endpoint.latence_datacenter_LD - endpoint.getter_latence_aux_caches_serveurs(cache_serveur.id)
+
+                # Si la vidéo est déjà dans la liste des gains,
+                #on ajoute le gain sinon on affecte le gain actuel.
+                if requete.video_id in gain_videos:
+                    gain_videos[requete.video_id] += gain_latence
+                else:
+                    gain_videos[requete.video_id] = gain_latence
+                    
+        gain_sorted = sorted(gain_videos.items(), key=lambda x: -x[1])
+        #print(gain_sorted)    
+        for (i, gain) in gain_sorted:
+
+            # Inutile d'ajouter les gains à 0,
+            # on arrete la boucle dès que la première vidéo à gain à 0 apparait
+            if gain == 0:
+                break
+              
+            video = videos_liste[i]
+            # Ajout de la vidéo dans la liste du cache serveur
+            cache_serveur.ajout_video(video)
+
+    # 2eme étape : amélioration de la solution trouvée 
+
+    liste_remplissage = []
+    for cache_serveur in cache_serveur_liste:
+        liste_remplissage.append( sum([video.poid for video in cache_serveur.videos]) / capacite_stockage )
+    if all( remplissage < 1 for remplissage in liste_remplissage  ):       
+        return cache_serveur_liste        
+
+
+    ##### MODIF SOLUCE
+    # > changement / poid de la VIDEO pas QS
+    
+    return cache_serveur_liste

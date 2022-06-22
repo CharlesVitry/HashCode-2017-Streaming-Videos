@@ -46,6 +46,14 @@ def contrainte1(cache_serveur_liste_solution,capacite_stockage):
           "\nMinimum de remplissage cache serveur : ",min(liste_remplissage)*100," %",
           "\nMaximum de remplissage cache serveur : ",max(liste_remplissage)*100," %")
 
+
+    #TEST CLOCLO
+    #for cache_serveur in cache_serveur_liste_solution :
+    #    print(cache_serveur.id)
+    #    print([video.poid for video in cache_serveur.videos])
+    #    print([video.id for video in cache_serveur.videos])
+
+    
     #On déclare la contrainte 1 comme non satisfaite si l'un des cache serveur est rempli à plus de 100%
     if any( remplissage > 1 for remplissage in liste_remplissage  ):
         return False
