@@ -40,11 +40,13 @@ def contrainte1(cache_serveur_liste_solution,capacite_stockage):
         #Si la somme du poid des vidéos est supérieur à la capacité du cache serveur alors la contrainte n'est pas respectée
         liste_remplissage.append( sum([video.poid for video in cache_serveur.videos]) / capacite_stockage )
 
+    #On affiche des statistiques à partir de la liste de remplissage obtenu
     print("Moyenne de remplissage cache serveur : ", mean(liste_remplissage)*100," %",
           "\nMédianne de remplissage cache serveur : ",median(liste_remplissage)*100," %",
           "\nMinimum de remplissage cache serveur : ",min(liste_remplissage)*100," %",
           "\nMaximum de remplissage cache serveur : ",max(liste_remplissage)*100," %")
 
+    #On déclare la contrainte 1 comme non satisfaite si l'un des cache serveur est rempli à plus de 100%
     if any( remplissage > 1 for remplissage in liste_remplissage  ):
         return False
 
@@ -64,23 +66,27 @@ def contrainte4():
     return True
 
 def contrainte5(cache_serveur_liste_solution, cache_serveur_liste ):
+
+    #On parcours les caches serveurs de solution et ceux lus.
+    #En effet lors de l'élaboration de la solution, on supprimme les requetes traité au fur et à mesure
+
     for cache_serveur_soluce, cache_serveur in zip(cache_serveur_liste_solution, cache_serveur_liste):
 
-        #print(cache_serveur_soluce.id, " ", cache_serveur.id)
+        #Liste des id de vidéos présent sur le cache serveur
         videos_id_du_cache_serveur = [video.id for video in cache_serveur_soluce.videos]
 
-
+        #Requetes du cache serveur
         requetes = [endpoint.requetes_liste for endpoint in cache_serveur.endpoints]
 
+        # Id des vidéos des requetes
         videos_id_des_requetes_du_cache_serveur =   [ requete.video_id for requete in
         [requetes_liste for requetes_liste in
          [requete for liste_requetes in requetes for requete in liste_requetes]
                                                      ]
                                                         ]
-
-  
-
-        if not all(video_id in videos_id_du_cache_serveur  for video_id in videos_id_des_requetes_du_cache_serveur):
+        #Si une des vidéos est présentes MAIS n'est pas demandé par une requete d'un
+        # des endpoints connecté au cache serveur ALors la contrainte 5 n'est pas respectée
+        if not all(video_id in videos_id_des_requetes_du_cache_serveur  for video_id in videos_id_du_cache_serveur):
             return False
 
     return True

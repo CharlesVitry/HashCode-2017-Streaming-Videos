@@ -19,36 +19,38 @@ Noms_Entrees_Sorties = {"me_at_the_zoo.in" : "me_at_the_zoo.out" ,
 
 def exec(Fichier_a_traite):
     #Lecture du fichier d'entrée
+
     donnees_entrees = lecture_fichier_entree(Fichier_a_traite)
+    input_heuristique = lecture_fichier_entree(Fichier_a_traite)
 
     date_debut_heuristique = time.time()
     #Application de l'heuristique
-    HeuristiqueGloutonne = gloutonne(
-         donnees_entrees.capacite_stockage,
-         donnees_entrees.videos_liste,
-         donnees_entrees.endpoints_liste,
-         donnees_entrees.cache_serveur_liste,
-         donnees_entrees.requetes_liste
-                                 )
+    # HeuristiqueGloutonne = gloutonne(
+    #      input_heuristique.capacite_stockage,
+    #      input_heuristique.videos_liste,
+    #      input_heuristique.endpoints_liste,
+    #      input_heuristique.cache_serveur_liste,
+    #      input_heuristique.requetes_liste
+    #                              )
 
 
 
     #BorneInferieur = borne_inferieur(donnees_entrees.cache_serveur_liste)
 
-    # BorneSuperieur = borne_superieur(donnees_entrees.cache_serveur_liste,
-    #                                 donnees_entrees.videos_liste)
+    BorneSuperieurGloutonne = borne_superieur_gloutonne(donnees_entrees.cache_serveur_liste,
+                                    donnees_entrees.videos_liste)
     date_fin_heuristique = time.time()
     print("Temps d'éxécution de  l'heuristique : ",
           time.strftime("%H:%M:%S", time.gmtime(date_fin_heuristique - date_debut_heuristique)))
 
     #Vérification de la validité de la solution produite
-    Validite_De_La_Solution(HeuristiqueGloutonne, donnees_entrees.cache_serveur_liste,     donnees_entrees.capacite_stockage )
+    Validite_De_La_Solution(BorneSuperieurGloutonne, donnees_entrees.cache_serveur_liste,     donnees_entrees.capacite_stockage )
 
     #Ecriture fichier sortie
     #ecriture_fichier_sortie(HeuristiqueGloutonne, Emplacement_Sorties + "resultat.out")
 
     # Calcul du Score Obtenu
-    return evaluation_heuristique(HeuristiqueGloutonne, donnees_entrees.requetes_liste, donnees_entrees.endpoints_liste, donnees_entrees.videos_liste)
+    return evaluation_heuristique(BorneSuperieurGloutonne, donnees_entrees.requetes_liste, donnees_entrees.endpoints_liste, donnees_entrees.videos_liste)
 
 
 

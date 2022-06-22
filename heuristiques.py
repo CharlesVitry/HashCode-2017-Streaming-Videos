@@ -25,7 +25,7 @@ def borne_inferieur(cache_serveur_liste):
     return cache_serveur_liste
 
 
-def borne_superieur(cache_serveur_liste, videos_liste):
+def borne_superieur_gloutonne(cache_serveur_liste, videos_liste):
     # On affecte toutes les vidéos à chaque cache serveur
     for cache_serveur in cache_serveur_liste:
         cache_serveur.videos = videos_liste
