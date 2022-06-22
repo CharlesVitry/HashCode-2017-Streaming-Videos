@@ -4,6 +4,7 @@ from lecture_ecriture_fichiers import *
 from heuristiques import *
 from contraintes import *
 from fonction_objective import *
+from donnees_modeles import *
 import time
 
 ########################
@@ -37,6 +38,10 @@ def exec(Fichier_a_traite):
 
     # BorneSuperieurGloutonne = borne_superieur_gloutonne(donnees_entrees.cache_serveur_liste,
     #                                 donnees_entrees.videos_liste)
+
+    UB = born_supp(input_heuristique.requetes_liste, input_heuristique.endpoints_liste, input_heuristique.cache_serveur_liste, input_heuristique.videos_liste)
+    print("UB : ", UB)
+
     date_fin_heuristique = time.time()
     print("Temps d'éxécution de  l'heuristique : ",
           time.strftime("%H:%M:%S", time.gmtime(date_fin_heuristique - date_debut_heuristique)))
@@ -57,8 +62,8 @@ if __name__ == '__main__':
     print("Lancement ! \n================== \nStatistiques d'Exécution \n")
     Latence_totale_sauve = []
     Latence_totale_sauve.append(exec("Instances_de_Test/me_at_the_zoo.in"))
-    #Latence_totale_sauve.append(exec("Instances_de_Test/trending_today.in"))
-    #Latence_totale_sauve.append(exec("Instances_de_Test/videos_worth_spreading.in"))
+    Latence_totale_sauve.append(exec("Instances_de_Test/trending_today.in"))
+    Latence_totale_sauve.append(exec("Instances_de_Test/videos_worth_spreading.in"))
 
     print("\nLatence totale sauvé sur les 3 fichiers : ", (Latence_totale_sauve)," \n================== ")
 
@@ -69,5 +74,7 @@ if __name__ == '__main__':
     # borne supérieur : 1 878 872
     # gloutonne : 1 567 505
     #########
+
+
 
 

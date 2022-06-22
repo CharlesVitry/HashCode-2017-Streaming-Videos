@@ -1,3 +1,5 @@
+from donnees_modeles import *
+
 # Structure en classes peu utile dans notre cas d'utilisation
 #
 # class Heuristique:
@@ -31,6 +33,47 @@ def borne_superieur_gloutonne(cache_serveur_liste, videos_liste):
         cache_serveur.videos = videos_liste
 
     return cache_serveur_liste
+
+
+def born_supp(requetes_liste, endpoints_liste, cache_serveur_liste, videos_liste):
+    UB = 0
+    best_latence_pondere = 0
+    somme_nombre_requete = 0
+    
+    # On parcours l'ensemble des requêtes 
+    for requete in requetes_liste :
+        endpoint_requete = objet_par_id(endpoints_liste, requete.endpoint_id)[0]
+        
+        # On récupère la latence au datacenter du endpoint de la requete
+        latence_datacenter_LD = endpoint_requete.latence_datacenter_LD
+
+        cache_id_all = []
+        latences_possible_video = [latence_datacenter_LD]
+
+        # On créé une liste des id de l'ensemble des cache serveur pour choisir le meilleur
+        for cacheserveur in cache_serveur_liste:
+            cache_id_all.append(cacheserveur.id)
+
+        # On fait la liste des id de cache serveurs qui dessert le endpoint de la requête
+        liste_id_cache_du_endpoint = [i['id_cache_serveur'] for i in (endpoint_requete.latence_aux_caches_serveurs)]
+
+        # On parcours l'ensemble des cash serveur, on recup la latence entre le endpoint de la requete 
+        for cache_serveur in liste_id_cache_du_endpoint:
+            if (cache_serveur in cache_id_all):
+                latences_possible_video.append(endpoint_requete.getter_latence_aux_caches_serveurs(cache_serveur))
+
+        # on choisis le meilleur gain
+        minimum = min(latences_possible_video)
+        best_latence = latence_datacenter_LD - minimum
+        somme_nombre_requete += requete.nombre_de_requetes
+        best_latence_pondere += requete.nombre_de_requetes * best_latence
+
+    UB = int(1000 * best_latence_pondere / somme_nombre_requete)
+    return UB
+
+
+
+
 
 def gloutonne(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_liste, requetes_liste, Randomized):
 
