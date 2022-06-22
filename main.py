@@ -32,7 +32,7 @@ def exec(Fichier_a_traite):
          input_heuristique.endpoints_liste,
          input_heuristique.cache_serveur_liste,
          input_heuristique.requetes_liste,
-         False,
+         True,
          True,
         1)
 
