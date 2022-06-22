@@ -75,7 +75,7 @@ def born_supp(requetes_liste, endpoints_liste, cache_serveur_liste, videos_liste
 
 
 
-def gloutonne(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_liste, requetes_liste, Randomized):
+def gloutonne(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_liste, requetes_liste,classementCache, GRASP, alphaGRASP):
 
 
     #Dans le cas d'une solution déjà présente,
@@ -104,7 +104,11 @@ def gloutonne(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_li
 
     # On ordonne les caches serveurs par leur importance
     # càd leurs gains possibles par rapport vidéos associés aux requetes de leurs endpoints
-    cache_serveurs_decroissant = sorted(cache_serveur_liste, key=lambda c: -c.importance_du_cache(videos_liste))
+    if classementCache:
+        cache_serveurs_decroissant = sorted(cache_serveur_liste, key=lambda c: -c.importance_du_cache(videos_liste))
+    else:
+        cache_serveurs_decroissant = cache_serveur_liste
+
 
     # On parcours chacun des caches serveurs
     for cache_serveur in cache_serveurs_decroissant:

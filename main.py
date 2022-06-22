@@ -32,7 +32,9 @@ def exec(Fichier_a_traite):
          input_heuristique.endpoints_liste,
          input_heuristique.cache_serveur_liste,
          input_heuristique.requetes_liste,
-         False                      )
+         False,
+         True,
+        1)
 
     #BorneInferieur = borne_inferieur(donnees_entrees.cache_serveur_liste)
 
@@ -62,8 +64,8 @@ if __name__ == '__main__':
     print("Lancement ! \n================== \nStatistiques d'Exécution \n")
     Latence_totale_sauve = []
     Latence_totale_sauve.append(exec("Instances_de_Test/me_at_the_zoo.in"))
-    Latence_totale_sauve.append(exec("Instances_de_Test/trending_today.in"))
-    Latence_totale_sauve.append(exec("Instances_de_Test/videos_worth_spreading.in"))
+    #Latence_totale_sauve.append(exec("Instances_de_Test/trending_today.in"))
+    #Latence_totale_sauve.append(exec("Instances_de_Test/videos_worth_spreading.in"))
 
     print("\nLatence totale sauvé sur les 3 fichiers : ", (Latence_totale_sauve)," \n================== ")
 
