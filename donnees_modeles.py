@@ -46,6 +46,7 @@ class Endpoints:
     latence_aux_caches_serveurs : list
     latence_datacenter_divise_LD : None = None
     requetes_liste : list = field(default_factory=list)
+    requetes_liste_a_traite : list = field(default_factory=list)
     latence_aux_caches_serveurs_divise : list = field(default_factory=list)
     dict_latence_aux_caches_serveurs_divise : dict = field(default_factory=dict)
 
@@ -67,8 +68,8 @@ class Endpoints:
         self.dict_latence_aux_caches_serveurs_divise[cache_serveur_id] = efficacite
         return efficacite
 
-    def supp_requete(self, video_id):
-        self.requetes_liste = [requete for requete in self.requetes_liste if requete.video_id != video_id]
+    def supp_requete_traite(self, video_id):
+        self.requetes_liste_a_traite = [requete for requete in self.requetes_liste_a_traite if requete.video_id != video_id]
 
     def ajout_requete(self, requete):
         self.requetes_liste.append(requete)

@@ -32,7 +32,20 @@ def borne_superieur_gloutonne(cache_serveur_liste, videos_liste):
 
     return cache_serveur_liste
 
-def gloutonne(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_liste, requetes_liste):
+def gloutonne(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_liste, requetes_liste, Randomized):
+
+
+    #Dans le cas d'une solution déjà présente,
+    #On vide la liste de vidéos déjà affectés au cache serveur
+    for cache_serveur in cache_serveur_liste:
+        cache_serveur.videos = []
+
+    #On commence par copié la liste des requetes des endpoints, en effet, une fois traité
+    # on supprimmera la requête pour recalculer le gain sur les endpoints
+    for endpoint in endpoints_liste:
+        endpoint.requetes_liste_a_traite = endpoint.requetes_liste
+
+
     # On calculs des ratios pour les poids de vidéos, les requetes et les endpoints
     somme_latence_datacenter = sum([endpoint.latence_datacenter_LD for endpoint in endpoints_liste])
     for endpoint in endpoints_liste:
@@ -56,7 +69,7 @@ def gloutonne(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_li
         # On calcul un gain ponderé sur chacune des vidéos pouvant entrer dans le cache serveur
         gain_videos = {}
         for endpoint in cache_serveur.endpoints:
-            for requete in endpoint.requetes_liste:
+            for requete in endpoint.requetes_liste_a_traite:
 
                 video = videos_liste[requete.video_id]
                 gain_latence_pondere = (endpoint.latence_datacenter_divise_LD - endpoint.getter_latence_aux_caches_serveurs_divise(cache_serveur.id)) * video.rapport_divise(endpoint.id)
@@ -94,7 +107,7 @@ def gloutonne(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_li
                 # On supprimme les requetes correspondantes à la vidéo sur
                 # les endpoints connecté au cache serveur
                 for endpoint in cache_serveur.endpoints:
-                    endpoint.supp_requete(video.id)
+                    endpoint.supp_requete_traite(video.id)
 
     return cache_serveur_liste
 
