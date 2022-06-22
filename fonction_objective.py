@@ -22,7 +22,6 @@ def evaluation_heuristique(cache_serveur_liste_solution,requetes_liste,endpoints
         #On créé une liste des id des caches serveur possèdant la vidéo
         for cacheserveur in cache_serveur_liste_solution:
             if  requete.video_id in [video.id for video in cacheserveur.videos] :
-                #print("ajout")
                 cache_id_avec_video.append(cacheserveur.id)
 
         #On fait la liste des id de cache serveurs qui dessert le endpoint de la requête
