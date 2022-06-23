@@ -1,5 +1,6 @@
 from donnees_modeles import *
 from contraintes import *
+import random
 
 # Structure en classes peu utile dans notre cas d'utilisation
 #
@@ -115,6 +116,7 @@ def gloutonne(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_li
     for cache_serveur in cache_serveurs_decroissant:
 
         # On calcul un gain ponderé sur chacune des vidéos pouvant entrer dans le cache serveur
+        # le dictionnaire a l'id de la vidéo et le gain associé à elle
         gain_videos = {}
         for endpoint in cache_serveur.endpoints:
             for requete in endpoint.requetes_liste_a_traite:
@@ -128,35 +130,85 @@ def gloutonne(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_li
                     gain_videos[requete.video_id] += gain_latence_pondere
                 else:
                     gain_videos[requete.video_id] = gain_latence_pondere
-        # On ordonne les gains de vidéos de façon décroissante
-        videos_ordonnees_decroissantes_par_gain = sorted(gain_videos.items(), key=lambda x: -x[1])
 
-        # On ajouter les vidéos dans le cache serveur tant qu'il y a de la place
-        poid_actuel_cache_serveur = 0
-        for (i, gain) in videos_ordonnees_decroissantes_par_gain:
 
-            # Inutile d'ajouter les gains à 0,
-            # on arrete la boucle dès que la première vidéo à gain à 0 apparait
-            
-            if gain == 0:
-                break
-              
-            video = videos_liste[i]
+        ###
+        # Méthode 1 d'ajout
+        #Si l'on choisit d'ajouter les vidéos directement par leurs gains pondérés
+        if not GRASP:
+            # On ordonne les gains de vidéos de façon décroissante
+            videos_ordonnees_decroissantes_par_gain = sorted(gain_videos.items(), key=lambda x: -x[1])
 
-            # On vérifie qu'il y a la place nécessaire pour mettre la vidéo
-            if (poid_actuel_cache_serveur + video.poid <= capacite_stockage):
+            # On ajouter les vidéos dans le cache serveur tant qu'il y a de la place
+            poid_actuel_cache_serveur = 0
+            for (i, gain) in videos_ordonnees_decroissantes_par_gain:
 
-                # Actualisation du poid occupé du cache serveur
-                poid_actuel_cache_serveur += video.poid
+                # Inutile d'ajouter les gains à 0,
+                # on arrete la boucle dès que la première vidéo à gain à 0 apparait
 
-                # Ajout de la vidéo dans la liste du cache serveur
-                cache_serveur.ajout_video(video)
+                if gain == 0:
+                    break
 
-                # On supprimme les requetes correspondantes à la vidéo sur
-                # les endpoints connecté au cache serveur
-                if nettoyage_requetes_video:
-                    for endpoint in cache_serveur.endpoints:
-                        endpoint.supp_requete_traite(video.id)
+                video = videos_liste[i]
+
+                # On vérifie qu'il y a la place nécessaire pour mettre la vidéo
+                if (poid_actuel_cache_serveur + video.poid <= capacite_stockage):
+
+                    # Actualisation du poid occupé du cache serveur
+                    poid_actuel_cache_serveur += video.poid
+
+                    # Ajout de la vidéo dans la liste du cache serveur
+                    cache_serveur.ajout_video(video)
+
+                    # On supprimme les requetes correspondantes à la vidéo sur
+                    # les endpoints connecté au cache serveur
+                    if nettoyage_requetes_video:
+                        for endpoint in cache_serveur.endpoints:
+                            endpoint.supp_requete_traite(video.id)
+        ###
+        # Méthode 2 d'ajout
+        # Si l'on ajoute les vidéos par une probabilité proportionnelle à leur gain
+        else:
+            somme_gain = sum(gain_videos.values() )**alphaGRASP
+            probabilite_par_video = {i: (gain**alphaGRASP)/somme_gain for i, gain in gain_videos.items()}
+
+            # On ajouter les vidéos dans le cache serveur tant qu'il y a de la place
+            poid_actuel_cache_serveur = 0
+            #On parcours l'ensemble des vidéos apte à rentrer dans le cache serveur
+            for x in probabilite_par_video:
+
+                #On tire un nombre de 0 à 1 et on initialise la somme des probas à 1
+                nombre_hasard = random.random()
+                somme_proba = 0
+
+                #On re-parcour le dictionnaire
+                for i in probabilite_par_video:
+
+                    #Si la somme des probas est supérieur au nombre au hasard, on ajoute la vidéo
+                    if somme_proba > nombre_hasard :
+
+
+                        video = videos_liste[i]
+                        # On vérifie qu'il y a la place nécessaire pour mettre la vidéo
+                        if (poid_actuel_cache_serveur + video.poid <= capacite_stockage):
+
+                            # Actualisation du poid occupé du cache serveur
+                            poid_actuel_cache_serveur += video.poid
+                            #print(poid_actuel_cache_serveur)
+
+                            # Ajout de la vidéo dans la liste du cache serveur
+                            cache_serveur.ajout_video(video)
+
+                            # On supprimme les requetes correspondantes à la vidéo sur
+                            # les endpoints connecté au cache serveur
+                            if nettoyage_requetes_video:
+                                for endpoint in cache_serveur.endpoints:
+                                    endpoint.supp_requete_traite(video.id)
+
+
+                        break
+
+                    somme_proba += probabilite_par_video[i]
 
     return cache_serveur_liste
 
@@ -174,17 +226,16 @@ def trajectory(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_l
 
     # 1ere étape : création d'une solution ne respectant pas la contrainte de capacités
     cache_serveur_liste = gloutonne(
-        capacite_stockage * 5,
+        capacite_stockage * 1000,
         videos_liste,
         endpoints_liste,
         cache_serveur_liste,
         requetes_liste,
-        False,
-        False,
         True,
+        False,
+        False,
         1)
-
-    # 2eme étape : amélioration de la solution trouvée 
+    # 2eme étape : amélioration de la solution trouvée
 
     liste_remplissage = []
     for cache_serveur in cache_serveur_liste:

@@ -43,10 +43,11 @@ def exec(Fichier_a_traite):
          donnees_heuristique.endpoints_liste,
          donnees_heuristique.cache_serveur_liste,
          donnees_heuristique.requetes_liste,
-         False,
-        True,
          True,
+        True,
+         False,
         1)
+
     #Vérification de la validité de la solution produite
     Validite_De_La_Solution(HeuristiqueGloutonne, donnees_entrees.cache_serveur_liste,     donnees_entrees.capacite_stockage )
 
