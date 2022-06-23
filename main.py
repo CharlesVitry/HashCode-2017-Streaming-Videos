@@ -22,41 +22,46 @@ def exec(Fichier_a_traite):
     #Lecture du fichier d'entrée
 
     donnees_entrees = lecture_fichier_entree(Fichier_a_traite)
-    input_heuristique = lecture_fichier_entree(Fichier_a_traite)
+    donnees_heuristique = lecture_fichier_entree(Fichier_a_traite)
 
     #BorneInferieur = borne_inferieur(donnees_entrees.cache_serveur_liste)
 
     # BorneSuperieurGloutonne = borne_superieur_gloutonne(donnees_entrees.cache_serveur_liste,
     #                                 donnees_entrees.videos_liste)
 
-    UB = born_supp(input_heuristique.requetes_liste, input_heuristique.endpoints_liste, input_heuristique.cache_serveur_liste, input_heuristique.videos_liste)
+    UB = born_supp(donnees_heuristique.requetes_liste,
+                   donnees_heuristique.endpoints_liste,
+                   donnees_heuristique.cache_serveur_liste,
+                   donnees_heuristique.videos_liste)
     print("UB : ", UB)
     
     date_debut_heuristique = time.time()
     #Application de l'heuristique
     HeuristiqueGloutonne = gloutonne(
-         input_heuristique.capacite_stockage,
-         input_heuristique.videos_liste,
-         input_heuristique.endpoints_liste,
-         input_heuristique.cache_serveur_liste,
-         input_heuristique.requetes_liste,
+         donnees_heuristique.capacite_stockage,
+         donnees_heuristique.videos_liste,
+         donnees_heuristique.endpoints_liste,
+         donnees_heuristique.cache_serveur_liste,
+         donnees_heuristique.requetes_liste,
          False,
+        True,
          True,
         1)
     #Vérification de la validité de la solution produite
     Validite_De_La_Solution(HeuristiqueGloutonne, donnees_entrees.cache_serveur_liste,     donnees_entrees.capacite_stockage )
-    
+
+    # Calcul du Score Obtenu
+    x = evaluation_heuristique(HeuristiqueGloutonne, donnees_entrees.requetes_liste, donnees_entrees.endpoints_liste,
+                               donnees_entrees.videos_liste)
 
     print("")
-    
-    donnees_entrees = lecture_fichier_entree(Fichier_a_traite)
-    input_heuristique = lecture_fichier_entree(Fichier_a_traite)
+
     Trajectory = trajectory(
-         input_heuristique.capacite_stockage,
-         input_heuristique.videos_liste,
-         input_heuristique.endpoints_liste,
-         input_heuristique.cache_serveur_liste,
-         input_heuristique.requetes_liste
+         donnees_heuristique.capacite_stockage,
+         donnees_heuristique.videos_liste,
+         donnees_heuristique.endpoints_liste,
+         donnees_heuristique.cache_serveur_liste,
+         donnees_heuristique.requetes_liste
          )
 
     
@@ -77,7 +82,6 @@ def exec(Fichier_a_traite):
     #ecriture_fichier_sortie(HeuristiqueGloutonne, Emplacement_Sorties + "resultat.out")
 
     # Calcul du Score Obtenu
-    x = evaluation_heuristique(HeuristiqueGloutonne, donnees_entrees.requetes_liste, donnees_entrees.endpoints_liste, donnees_entrees.videos_liste)
     y = evaluation_heuristique(Trajectory, donnees_entrees.requetes_liste, donnees_entrees.endpoints_liste, donnees_entrees.videos_liste)
 
     result = [x, y]

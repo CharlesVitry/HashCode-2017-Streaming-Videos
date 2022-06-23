@@ -76,7 +76,7 @@ def born_supp(requetes_liste, endpoints_liste, cache_serveur_liste, videos_liste
 
 
 
-def gloutonne(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_liste, requetes_liste,classementCache, GRASP, alphaGRASP):
+def gloutonne(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_liste, requetes_liste,classementCache,nettoyage_requetes_video, GRASP, alphaGRASP):
 
 
     #Dans le cas d'une solution déjà présente,
@@ -144,7 +144,7 @@ def gloutonne(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_li
             video = videos_liste[i]
 
             # On vérifie qu'il y a la place nécessaire pour mettre la vidéo
-            if (poid_actuel_cache_serveur + video.poid <= cache_serveur.capacite):
+            if (poid_actuel_cache_serveur + video.poid <= capacite_stockage):
 
                 # Actualisation du poid occupé du cache serveur
                 poid_actuel_cache_serveur += video.poid
@@ -154,45 +154,35 @@ def gloutonne(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_li
 
                 # On supprimme les requetes correspondantes à la vidéo sur
                 # les endpoints connecté au cache serveur
-                for endpoint in cache_serveur.endpoints:
-                    endpoint.supp_requete_traite(video.id)
+                if nettoyage_requetes_video:
+                    for endpoint in cache_serveur.endpoints:
+                        endpoint.supp_requete_traite(video.id)
 
     return cache_serveur_liste
 
 def trajectory(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_liste, requetes_liste) :
 
+    # Dans le cas d'une solution déjà présente,
+    # On vide la liste de vidéos déjà affectés au cache serveur
+    for cache_serveur in cache_serveur_liste:
+        cache_serveur.videos = []
+
+    #On copie la liste des requetes original
     for endpoint in endpoints_liste:
         endpoint.requetes_liste_a_traite = endpoint.requetes_liste
 
 
     # 1ere étape : création d'une solution ne respectant pas la contrainte de capacités
-    for cache_serveur in cache_serveur_liste :
-        gain_videos = {}
-        for endpoint in cache_serveur.endpoints :
-    
-            for requete in endpoint.requetes_liste_a_traite :
-                video = videos_liste[requete.video_id]
-                gain_latence = endpoint.latence_datacenter_LD - endpoint.getter_latence_aux_caches_serveurs(cache_serveur.id)
-
-                # Si la vidéo est déjà dans la liste des gains,
-                #on ajoute le gain sinon on affecte le gain actuel.
-                if requete.video_id in gain_videos:
-                    gain_videos[requete.video_id] += gain_latence
-                else:
-                    gain_videos[requete.video_id] = gain_latence
-                    
-        gain_sorted = sorted(gain_videos.items(), key=lambda x: -x[1])
-        #print(gain_sorted)    
-        for (i, gain) in gain_sorted:
-
-            # Inutile d'ajouter les gains à 0,
-            # on arrete la boucle dès que la première vidéo à gain à 0 apparait
-            if gain == 0:
-                break
-              
-            video = videos_liste[i]
-            # Ajout de la vidéo dans la liste du cache serveur
-            cache_serveur.ajout_video(video)
+    cache_serveur_liste = gloutonne(
+        capacite_stockage * 5,
+        videos_liste,
+        endpoints_liste,
+        cache_serveur_liste,
+        requetes_liste,
+        False,
+        False,
+        True,
+        1)
 
     # 2eme étape : amélioration de la solution trouvée 
 
