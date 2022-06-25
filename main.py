@@ -37,16 +37,20 @@ def exec(Fichier_a_traite):
     
     date_debut_heuristique = time.time()
     #Application de l'heuristique
-    HeuristiqueGloutonne = gloutonne(
+    HeuristiqueGloutonne = gloutonneDeprecated(
          donnees_heuristique.capacite_stockage,
          donnees_heuristique.videos_liste,
          donnees_heuristique.endpoints_liste,
          donnees_heuristique.cache_serveur_liste,
          donnees_heuristique.requetes_liste,
-         True,
-        True,
-         False,
-        1)
+        classementCache = True,
+        nettoyage_requetes_video =  True,
+        GRASP =    False,
+        alphaGRASP = 1)
+
+    date_fin_heuristique = time.time()
+    print("Temps d'éxécution de  l'heuristique : ",
+          time.strftime("%H:%M:%S", time.gmtime(date_fin_heuristique - date_debut_heuristique)))
 
     #Vérification de la validité de la solution produite
     Validite_De_La_Solution(HeuristiqueGloutonne, donnees_entrees.cache_serveur_liste,     donnees_entrees.capacite_stockage )
@@ -55,40 +59,10 @@ def exec(Fichier_a_traite):
     x = evaluation_heuristique(HeuristiqueGloutonne, donnees_entrees.requetes_liste, donnees_entrees.endpoints_liste,
                                donnees_entrees.videos_liste)
 
-    print("")
-
-    Trajectory = trajectory(
-         donnees_heuristique.capacite_stockage,
-         donnees_heuristique.videos_liste,
-         donnees_heuristique.endpoints_liste,
-         donnees_heuristique.cache_serveur_liste,
-         donnees_heuristique.requetes_liste
-         )
-
-    
-    #Vérification de la validité de la solution produite
-    Validite_De_La_Solution(Trajectory, donnees_entrees.cache_serveur_liste,     donnees_entrees.capacite_stockage )
-
-    
-    
-
-    date_fin_heuristique = time.time()
-    print("Temps d'éxécution de  l'heuristique : ",
-          time.strftime("%H:%M:%S", time.gmtime(date_fin_heuristique - date_debut_heuristique)))
-
-    
-
-
     #Ecriture fichier sortie
-    #ecriture_fichier_sortie(HeuristiqueGloutonne, Emplacement_Sorties + "resultat.out")
+    #ecriture_fichier_sortie(HeuristiqueGloutonne, Emplacement_Sorties + "Gloutonne.out")
 
-    # Calcul du Score Obtenu
-    y = evaluation_heuristique(Trajectory, donnees_entrees.requetes_liste, donnees_entrees.endpoints_liste, donnees_entrees.videos_liste)
-
-    result = [x, y]
-    return result
-
-
+    return x
 
 if __name__ == '__main__':
     print("Lancement ! \n================== \nStatistiques d'Exécution \n")

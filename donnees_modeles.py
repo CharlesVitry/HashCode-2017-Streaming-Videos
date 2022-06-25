@@ -4,11 +4,22 @@ from dataclasses import dataclass, field
 class Videos:
     id : int
     poid: int
-    requetes_liste : list = field(default_factory=list)
+    requetes_liste : list = field(default_factory=list) 
     efficacite_par_endpoint : dict = field(default_factory=dict)
     efficacite_divise : dict = field(default_factory=dict)
     poid_divise : None = None
 
+    def rentabilite_video(self, cash_serveur):
+        liste_id_endpoint_cash_serveur = [endpoint.id for endpoint in cash_serveur.endpoints]
+        requetes_video_au_cache = [requete for requete in self.requetes_liste if requete.endpoint_id in liste_id_endpoint_cash_serveur]
+
+        rentabilite = 0
+        for requete in requetes_video_au_cache :
+
+            rentabilite += self.rapport_divise(requete.endpoint_id) * \
+                           (objet_par_id(cash_serveur.endpoints,requete.endpoint_id)[0].latence_datacenter_divise_LD -
+                            objet_par_id(cash_serveur.endpoints,requete.endpoint_id)[0].getter_latence_aux_caches_serveurs_divise(cash_serveur.id))
+        return  rentabilite
     def ajout_requete(self, requete):
         self.requetes_liste.append(requete)
 
@@ -22,7 +33,7 @@ class Videos:
         self.poid_divise = (self.poid / poid_videos_total)
 
     def efficacite(self):
-        return sum([request.nombre_de_requetes for request in self.requetes_liste])
+        return sum([requete.nombre_de_requetes for requete in self.requetes_liste])
 
     def efficacite_par_endpoint_fonction(self, endpoint_id):
         if endpoint_id in self.efficacite_par_endpoint:

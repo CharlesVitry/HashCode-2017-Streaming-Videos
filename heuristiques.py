@@ -74,10 +74,10 @@ def born_supp(requetes_liste, endpoints_liste, cache_serveur_liste, videos_liste
     return UB
 
 
+def borne_sup_lagrangienne():
+    None
 
-
-
-def gloutonne(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_liste, requetes_liste,classementCache,nettoyage_requetes_video, GRASP, alphaGRASP):
+def gloutonneDeprecated(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_liste, requetes_liste,classementCache,nettoyage_requetes_video, GRASP, alphaGRASP):
 
 
     #Dans le cas d'une solution déjà présente,
@@ -122,7 +122,10 @@ def gloutonne(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_li
             for requete in endpoint.requetes_liste_a_traite:
 
                 video = videos_liste[requete.video_id]
+
+                video.rentabilite_video(cache_serveur)
                 gain_latence_pondere = (endpoint.latence_datacenter_divise_LD - endpoint.getter_latence_aux_caches_serveurs_divise(cache_serveur.id)) * video.rapport_divise(endpoint.id)
+
 
                 # Si la vidéo est déjà dans la liste des gains,
                 #on ajoute le gain sinon on affecte le gain actuel.
@@ -183,11 +186,9 @@ def gloutonne(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_li
 
                 #On re-parcour le dictionnaire
                 for i in probabilite_par_video:
-
+                    somme_proba += probabilite_par_video[i]
                     #Si la somme des probas est supérieur au nombre au hasard, on ajoute la vidéo
                     if somme_proba > nombre_hasard :
-
-
                         video = videos_liste[i]
                         # On vérifie qu'il y a la place nécessaire pour mettre la vidéo
                         if (poid_actuel_cache_serveur + video.poid <= capacite_stockage):
@@ -208,9 +209,12 @@ def gloutonne(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_li
 
                         break
 
-                    somme_proba += probabilite_par_video[i]
+
 
     return cache_serveur_liste
+
+
+
 
 def trajectory(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_liste, requetes_liste) :
 
