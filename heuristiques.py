@@ -171,10 +171,10 @@ def gloutonneDeprecated(capacite_stockage, videos_liste, endpoints_liste, cache_
                     if somme_proba > nombre_hasard :
                         video = videos_liste[i]
                         # On vérifie qu'il y a la place nécessaire pour mettre la vidéo
-                        if (poid_actuel_cache_serveur + video.poid <= capacite_stockage):
+                        if (cache_serveur.capacite_occupe + video.poid <= capacite_stockage):
 
                             # Actualisation du poid occupé du cache serveur
-                            poid_actuel_cache_serveur += video.poid
+                            cache_serveur.capacite_occupe += video.poid
                             #print(poid_actuel_cache_serveur)
 
                             # Ajout de la vidéo dans la liste du cache serveur
@@ -218,7 +218,7 @@ def gloutonneDeprecated(capacite_stockage, videos_liste, endpoints_liste, cache_
             videos_ordonnees_decroissantes_par_gain = sorted(gain_videos.items(), key=lambda x: -x[1])
 
             # On ajouter les vidéos dans le cache serveur tant qu'il y a de la place
-            poid_actuel_cache_serveur = 0
+
             for (i, gain) in videos_ordonnees_decroissantes_par_gain:
 
                 # Inutile d'ajouter les gains à 0,
@@ -230,10 +230,10 @@ def gloutonneDeprecated(capacite_stockage, videos_liste, endpoints_liste, cache_
                 video = videos_liste[i]
 
                 # On vérifie qu'il y a la place nécessaire pour mettre la vidéo
-                if (poid_actuel_cache_serveur + video.poid <= capacite_stockage):
+                if (cache_serveur.capacite_occupe + video.poid <= capacite_stockage):
 
                     # Actualisation du poid occupé du cache serveur
-                    poid_actuel_cache_serveur += video.poid
+                    cache_serveur.capacite_occupe += video.poid
 
                     # Ajout de la vidéo dans la liste du cache serveur
                     cache_serveur.ajout_video(video)
