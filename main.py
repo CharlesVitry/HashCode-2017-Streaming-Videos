@@ -36,6 +36,8 @@ def exec(Fichier_a_traite):
     print("UB : ", UB)
     
     date_debut_heuristique = time.time()
+
+    
     #Application de l'heuristique
     HeuristiqueGloutonne = gloutonneDeprecated(
          donnees_heuristique.capacite_stockage,
@@ -45,7 +47,7 @@ def exec(Fichier_a_traite):
          donnees_heuristique.requetes_liste,
         classementCache = True,
         nettoyage_requetes_video =  True,
-        GRASP =    True,
+        GRASP =    False,
         alphaGRASP = 1)
 
     date_fin_heuristique = time.time()
@@ -56,10 +58,13 @@ def exec(Fichier_a_traite):
     Validite_De_La_Solution(HeuristiqueGloutonne, donnees_entrees.cache_serveur_liste,     donnees_entrees.capacite_stockage )
 
     # Calcul du Score Obtenu
-    x = evaluation_heuristique(HeuristiqueGloutonne, donnees_entrees.requetes_liste, donnees_entrees.endpoints_liste,
+    EvalHeuristiqueGloutonne = evaluation_heuristique(HeuristiqueGloutonne, donnees_entrees.requetes_liste, donnees_entrees.endpoints_liste,
                                donnees_entrees.videos_liste)
 
 
+    donnees_entrees = lecture_fichier_entree(Fichier_a_traite)
+    donnees_heuristique = lecture_fichier_entree(Fichier_a_traite)
+    
     LocalSearch = try_local_search(donnees_heuristique.capacite_stockage,
                                    donnees_heuristique.videos_liste,
                                    donnees_heuristique.endpoints_liste,
@@ -76,9 +81,9 @@ def exec(Fichier_a_traite):
 
     #Ecriture fichier sortie
     #ecriture_fichier_sortie(HeuristiqueGloutonne, Emplacement_Sorties + "Gloutonne.out")
-    tab = [x, EvalLocalSearch]
+    tab = [EvalHeuristiqueGloutonne, EvalLocalSearch]
     
-    return x
+    return tab
 
 if __name__ == '__main__':
     print("Lancement ! \n================== \nStatistiques d'Exécution \n")

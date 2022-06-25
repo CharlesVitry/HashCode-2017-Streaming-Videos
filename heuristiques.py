@@ -453,9 +453,12 @@ def try_local_search(capacite_stockage, videos_liste, endpoints_liste, cache_ser
         cache_serveur_liste,
         requetes_liste,
         True,
-        False,
+        True,
         False,
         1)
+
+    Validite_De_La_Solution(cache_serveur_liste, cache_serveur_liste, capacite_stockage )
+
 
     score_max = evaluation_heuristique(cache_serveur_liste, requetes_liste, endpoints_liste, videos_liste)
 
@@ -483,7 +486,7 @@ def try_local_search(capacite_stockage, videos_liste, endpoints_liste, cache_ser
         
         for i in range(0, len(liste_videos_in)) :
 
-            for j in range (0, 20):
+            for j in range (0, 100):
                 # NOUVELLE VIDEO
                 temps_video = random.choice(liste_videos_s)
                 #print("temps_video" , temps_video.id)
@@ -505,19 +508,19 @@ def try_local_search(capacite_stockage, videos_liste, endpoints_liste, cache_ser
                     
 
                     if (nouveau_poid <= capacite_stockage):
-                        print("temps_video_poid" , temps_video_poid)
-                        print("old_video_poid" , old_video_poid)
-                        print(nouveau_poid)
-                        print(capacite_stockage)
+                        #print("temps_video_poid" , temps_video_poid)
+                        #print("old_video_poid" , old_video_poid)
+                        #print(nouveau_poid)
+                        #print(capacite_stockage)
                         
                         # MISE A JOUR
                                                    
                         liste_videos_modif[i] = temps_video
                         cache_serveur.videos = liste_videos_modif
 
-                        poid_actuel_cache_serveur = cache_serveur.capacite_occupe
-                        print(poid_actuel_cache_serveur)
-                        print("")
+                        poid_actuel_cache_serveur = sum([video.poid for video in cache_serveur.videos])
+                        #print(poid_actuel_cache_serveur)
+                        #print("")
                         #print("poid_actuel_cache_serveur", poid_actuel_cache_serveur)
                         
                         #print("score_max", score_max)
