@@ -250,3 +250,62 @@ def trajectory(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_l
     # > changement / poid de la VIDEO pas QS
     
     return cache_serveur_liste
+
+
+def try_local_search(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_liste, requetes_liste) :
+    # Dans le cas d'une solution déjà présente,
+    # On vide la liste de vidéos déjà affectés au cache serveur
+    for cache_serveur in cache_serveur_liste:
+        cache_serveur.videos = []
+
+    #On copie la liste des requetes original
+    for endpoint in endpoints_liste:
+        endpoint.requetes_liste_a_traite = endpoint.requetes_liste
+
+    # 1ere étape : création d'une solution ne respectant pas la contrainte de capacités
+    cache_serveur_liste = gloutonne(
+        capacite_stockage * 1000,
+        videos_liste,
+        endpoints_liste,
+        cache_serveur_liste,
+        requetes_liste,
+        True,
+        False,
+        False,
+        1)
+
+    score_max = evaluation_heuristique(cache_serveur_liste, requetes_liste, endpoints_liste, videos_liste)
+
+    for cache_serveur in cache_serveur_liste:
+
+        poid_actuel_cache_serveur = sum([video.poid for video in cache_serveur.videos])
+
+        videos_id_du_cache_serveur = [video for video in cache_serveur.videos]
+        requetes = [endpoint.requetes_liste for endpoint in cache_serveur.endpoints]
+        videos_des_requetes_du_cache_serveur =   [ objet_par_id(videos_liste, requete.video_id) for requete in
+                                    [requetes_liste for requetes_liste in
+                             [requete for liste_requetes in requetes for requete in liste_requetes]]]
+
+                                        
+        liste_videos_in = [video.id for video in cache_serveur.videos]
+        liste_videos_s = [video for video in videos_des_requetes_du_cache_serveur if video not in liste_videos_in]
+        liste_videos_modif = liste_videos_in
+        #print(liste_videos_in)
+        #print(liste_videos_s)
+        #print("")
+        for i in range(0, len(liste_videos_in)) :
+            temps_video = random.choice(liste_videos_s)
+            
+            liste_videos_modif[i] = temps_video
+            cache_serveur.videos = liste_videos_modif
+
+            print(temps_video)
+            if (poid_actuel_cache_serveur + temps_video.poid - liste_videos_modif[i].poid <= capacite_stockage):
+                if(evaluation_heuristique(cache_serveur_liste, requetes_liste, endpoints_liste, videos_liste) > score_max):
+                    score_max = evaluation_heuristique(cache_serveur_liste, requetes_liste, endpoints_liste, videos_liste)
+                    poid_actuel_cache_serveur += temps_video.poid
+                else :
+                    cache_serveur.videos = liste_videos_in
+            else :
+                cache_serveur.videos = liste_videos_in
+    return cache_serveur_liste
