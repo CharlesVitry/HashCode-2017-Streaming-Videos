@@ -59,9 +59,25 @@ def exec(Fichier_a_traite):
     x = evaluation_heuristique(HeuristiqueGloutonne, donnees_entrees.requetes_liste, donnees_entrees.endpoints_liste,
                                donnees_entrees.videos_liste)
 
+
+    LocalSearch = try_local_search(donnees_heuristique.capacite_stockage,
+                                   donnees_heuristique.videos_liste,
+                                   donnees_heuristique.endpoints_liste,
+                                   donnees_heuristique.cache_serveur_liste,
+                                   donnees_heuristique.requetes_liste) 
+    
+    
+    #Vérification de la validité de la solution produite
+    Validite_De_La_Solution(LocalSearch, donnees_entrees.cache_serveur_liste,     donnees_entrees.capacite_stockage )
+
+    # Calcul du Score Obtenu
+    EvalLocalSearch = evaluation_heuristique(LocalSearch, donnees_entrees.requetes_liste, donnees_entrees.endpoints_liste,
+                               donnees_entrees.videos_liste)
+
     #Ecriture fichier sortie
     #ecriture_fichier_sortie(HeuristiqueGloutonne, Emplacement_Sorties + "Gloutonne.out")
-
+    tab = [x, EvalLocalSearch]
+    
     return x
 
 if __name__ == '__main__':

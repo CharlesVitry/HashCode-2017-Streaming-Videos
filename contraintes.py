@@ -48,10 +48,11 @@ def contrainte1(cache_serveur_liste_solution,capacite_stockage):
 
 
     #TEST CLOCLO
-    #for cache_serveur in cache_serveur_liste_solution :
-    #    print(cache_serveur.id)
-    #    print([video.poid for video in cache_serveur.videos])
-    #    print([video.id for video in cache_serveur.videos])
+    for cache_serveur in cache_serveur_liste_solution :
+        print(cache_serveur.id)
+        print(sum([video.poid for video in cache_serveur.videos]))
+        print([video.poid for video in cache_serveur.videos])
+        print([video.id for video in cache_serveur.videos])
 
     
     #On déclare la contrainte 1 comme non satisfaite si l'un des cache serveur est rempli à plus de 100%
