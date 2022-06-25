@@ -114,7 +114,7 @@ class Cache_Serveur:
 
     def ajout_video(self, video):
         self.videos.append(video)
-
+    
     def importance_du_cache(self, videos):
         importance = 0
         # on parcours les endpoints du cache serveurs

@@ -4,6 +4,7 @@ from contraintes import *
 from fonction_objective import *
 from donnees_modeles import *
 import random
+import numpy as np
 
 # Structure en classes peu utile dans notre cas d'utilisation
 #
@@ -77,8 +78,16 @@ def born_supp(requetes_liste, endpoints_liste, cache_serveur_liste, videos_liste
     return UB
 
 
-def borne_sup_lagrangienne():
-    None
+def borne_sup_lagrangienne(nbre_cache_serveur, nbre_requetes, cache_serveur_liste):
+    y = np.zeros((nbre_cache_serveur, nbre_requetes))
+    for cache_serveur in cache_serveur_liste :
+        for endpoint in cache_serveur.endpoints :
+            for requete in endpoint.requetes_liste :
+                y[cache_serveur.id][requete.endpoint_id] = 1
+    print(y)
+
+    # Décomposition lagrangienne après dualisation
+    
 
 def gloutonneDeprecated(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_liste, requetes_liste,classementCache,nettoyage_requetes_video, GRASP, alphaGRASP):
 
@@ -451,8 +460,7 @@ def try_local_search(capacite_stockage, videos_liste, endpoints_liste, cache_ser
         False,
         1)
 
-    #Validite_De_La_Solution(cache_serveur_liste, cache_serveur_liste, capacite_stockage )
-
+    
 
     score_max = evaluation_heuristique(cache_serveur_liste, requetes_liste, endpoints_liste, videos_liste)
 
@@ -470,29 +478,19 @@ def try_local_search(capacite_stockage, videos_liste, endpoints_liste, cache_ser
         liste_videos_in = [video for video in cache_serveur.videos]
         liste_videos_s = [video for video in videos_liste]
         
-
-        #print("liste_videos_in" , liste_videos_in)
-        #print("liste_videos_s", liste_videos_s)
-        #print("liste_videos_modif" , liste_videos_modif)
-        #print("test" , type(liste_videos_in[2]))
-        #print("")
         
         for i in range(0, len(liste_videos_in)) :
 
-            for j in range (0, 10):
+            for j in range (0, 50):
                 # NOUVELLE VIDEO
                 temps_video = random.choice(liste_videos_s)
-                #print("temps_video" , temps_video.id)
-                #print(type(temps_video))
                 temps_video_poid = temps_video.poid
-                #print("temps_video_poid" , temps_video_poid)
 
 
                 # ANCIENNE VIDEO
                 old_video = liste_videos_in[i]
                 old_video_poid = old_video.poid
-                #print("old_video" , old_video.id)
-                #print("old_video_poid" , old_video_poid)
+                
                 
                 if(temps_video.id != old_video.id):
 
@@ -508,19 +506,17 @@ def try_local_search(capacite_stockage, videos_liste, endpoints_liste, cache_ser
                         cache_serveur.capacite_occupe -= old_video_poid 
 
                         poid_actuel_cache_serveur = cache_serveur.capacite_occupe
-                        #print("poid_actuel_cache_serveur", poid_actuel_cache_serveur)
                         
-                        #print("score_max", score_max)
                         nouveau_score = evaluation_heuristique(cache_serveur_liste, requetes_liste, endpoints_liste, videos_liste)
-                        #print("nouveau_score", nouveau_score)
+                        
                         if(nouveau_score > score_max):
-                            print("id", cache_serveur.id)
-                            print("poid", cache_serveur.capacite_occupe)
                             score_max = nouveau_score
 
                         else :
                             liste_videos_in[i] = old_video
                             cache_serveur.videos = liste_videos_in
+                            cache_serveur.capacite_occupe -= temps_video_poid
+                            cache_serveur.capacite_occupe += old_video_poid 
                             poid_actuel_cache_serveur = cache_serveur.capacite_occupe - temps_video_poid + old_video_poid
                     else :
                         pass

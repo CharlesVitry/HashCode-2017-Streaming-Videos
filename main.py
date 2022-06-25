@@ -5,6 +5,7 @@ from heuristiques import *
 from contraintes import *
 from fonction_objective import *
 from donnees_modeles import *
+import numpy as np
 import time
 
 ########################
@@ -34,6 +35,11 @@ def exec(Fichier_a_traite):
                    donnees_heuristique.cache_serveur_liste,
                    donnees_heuristique.videos_liste)
     print("UB : ", UB)
+
+
+    UBLagrange = borne_sup_lagrangienne(donnees_heuristique.nbre_cache_serveur,
+                                        donnees_heuristique.nbre_requetes,
+                                        donnees_heuristique.cache_serveur_liste)
     
     date_debut_heuristique = time.time()
 
@@ -50,10 +56,7 @@ def exec(Fichier_a_traite):
         GRASP =    False,
         alphaGRASP = 1)
 
-    date_fin_heuristique = time.time()
-    print("Temps d'éxécution de  l'heuristique : ",
-          time.strftime("%H:%M:%S", time.gmtime(date_fin_heuristique - date_debut_heuristique)))
-
+    
     #Vérification de la validité de la solution produite
     Validite_De_La_Solution(HeuristiqueGloutonne, donnees_entrees.cache_serveur_liste,     donnees_entrees.capacite_stockage )
 
@@ -82,7 +85,11 @@ def exec(Fichier_a_traite):
     #Ecriture fichier sortie
     #ecriture_fichier_sortie(HeuristiqueGloutonne, Emplacement_Sorties + "Gloutonne.out")
     tab = [EvalHeuristiqueGloutonne, EvalLocalSearch]
-    
+
+    date_fin_heuristique = time.time()
+    print("Temps d'éxécution de  l'heuristique : ",
+        time.strftime("%H:%M:%S", time.gmtime(date_fin_heuristique - date_debut_heuristique)))
+
     return tab
 
 if __name__ == '__main__':
