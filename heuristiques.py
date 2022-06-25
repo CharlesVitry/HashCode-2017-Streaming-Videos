@@ -122,8 +122,6 @@ def gloutonneDeprecated(capacite_stockage, videos_liste, endpoints_liste, cache_
             for requete in endpoint.requetes_liste_a_traite:
 
                 video = videos_liste[requete.video_id]
-
-                video.rentabilite_video(cache_serveur)
                 gain_latence_pondere = (endpoint.latence_datacenter_divise_LD - endpoint.getter_latence_aux_caches_serveurs_divise(cache_serveur.id)) * video.rapport_divise(endpoint.id)
 
 
