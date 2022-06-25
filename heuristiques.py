@@ -120,20 +120,13 @@ def gloutonneDeprecated(capacite_stockage, videos_liste, endpoints_liste, cache_
     ###########################
 
     if GRASP:
+        # somme_importance_caches = sum([cache_serveur.importance for cache_serveur in cache_serveurs_decroissant ])
+        #
+        # for cache_serveur in cache_serveurs_decroissant:
+        #     cache_serveur.importance_divise_fonction(somme_importance_caches)
 
-        somme_importance_caches = sum([cache_serveur.importance for cache_serveur in cache_serveurs_decroissant ])
-
-        for cache_serveur in cache_serveurs_decroissant:
-            cache_serveur.importance_divise_fonction(somme_importance_caches)
-
-
-
-
-
-
-        # On parcours chacun des caches serveurs
-        for cache_serveur in cache_serveurs_decroissant:
-
+        # On parcours chacun des caches serveurs de manière totalement aléatoire
+        for cache_serveur in sorted(cache_serveurs_decroissant, key=lambda _: random.random()):
             # On calcul un gain ponderé sur chacune des vidéos pouvant entrer dans le cache serveur
             # le dictionnaire a l'id de la vidéo et le gain associé à elle
             gain_videos = {}
@@ -151,21 +144,17 @@ def gloutonneDeprecated(capacite_stockage, videos_liste, endpoints_liste, cache_
                     else:
                         gain_videos[requete.video_id] = gain_latence_pondere
 
-
+            #Calcul des probabilités par vidéo
             somme_gain = sum(gain_videos.values() )**alphaGRASP
             probabilite_par_video = {i: (gain**alphaGRASP)/somme_gain for i, gain in gain_videos.items()}
 
-            # On ajouter les vidéos dans le cache serveur tant qu'il y a de la place
-            poid_actuel_cache_serveur = 0
-            #On parcours l'ensemble des vidéos apte à rentrer dans le cache serveur
-            for x in probabilite_par_video:
-
+            while len(probabilite_par_video) != 0:
                 #On tire un nombre de 0 à 1 et on initialise la somme des probas à 1
                 nombre_hasard = random.random()
                 somme_proba = 0
 
-                #On re-parcour le dictionnaire
-                for i in probabilite_par_video:
+                #On parcours le dictionnaire
+                for i in list(probabilite_par_video):
                     somme_proba += probabilite_par_video[i]
                     #Si la somme des probas est supérieur au nombre au hasard, on ajoute la vidéo
                     if somme_proba > nombre_hasard :
@@ -187,9 +176,14 @@ def gloutonneDeprecated(capacite_stockage, videos_liste, endpoints_liste, cache_
                                     endpoint.supp_requete_traite(video.id)
 
 
+                        #On arrete la boucle quand une vidéo a été choisi, la vidéo est supprimmé du dictionnaire
+                        del probabilite_par_video[i]
                         break
 
 
+    ###########################
+    # Méthode 2  on ajoute les vidéos par des un classement décroissant de score
+    ###########################
 
     else:
         # On parcours chacun des caches serveurs
