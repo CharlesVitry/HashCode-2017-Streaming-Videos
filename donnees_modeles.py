@@ -9,6 +9,11 @@ class Videos:
     efficacite_divise : dict = field(default_factory=dict)
     poid_divise : None = None
 
+
+    def supp_requete(self,endpoint_id):
+        self.requetes_liste = [requete for requete in self.requetes_liste if requete.endpoint_id != endpoint_id]
+
+
     def rentabilite_video(self, cash_serveur):
         liste_id_endpoint_cash_serveur = [endpoint.id for endpoint in cash_serveur.endpoints]
         requetes_video_au_cache = [requete for requete in self.requetes_liste if requete.endpoint_id in liste_id_endpoint_cash_serveur]
@@ -90,8 +95,14 @@ class Endpoints:
 class Cache_Serveur:
     id : int
     capacite : int
+    capacite_occupe: int = 0
     endpoints : list = field(default_factory=list)
     videos : list = field(default_factory=list)
+
+
+    def suppression_requete(self, video_id, endpoint_id):
+        self.requetes_liste = [requete for requete in self.requetes_liste if
+                               requete.endpoint_id != endpoint_id and requete.video_id != video_id]
 
 
     def ajout_endpoint(self, endpoint):
