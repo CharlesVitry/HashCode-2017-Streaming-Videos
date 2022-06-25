@@ -37,7 +37,7 @@ def exec(Fichier_a_traite):
     
     date_debut_heuristique = time.time()
     #Application de l'heuristique
-    HeuristiqueGloutonne = gloutonne_nouvelle(
+    HeuristiqueGloutonne = gloutonneDeprecated(
          donnees_heuristique.capacite_stockage,
          donnees_heuristique.videos_liste,
          donnees_heuristique.endpoints_liste,
@@ -45,9 +45,8 @@ def exec(Fichier_a_traite):
          donnees_heuristique.requetes_liste,
         classementCache = True,
         nettoyage_requetes_video =  True,
-        GRASP =    False,
-        alphaGRASP = 1,
-    nombre_de_video_a_ajoute_par_cache = 1)
+        GRASP =    True,
+        alphaGRASP = 1)
 
     date_fin_heuristique = time.time()
     print("Temps d'éxécution de  l'heuristique : ",

@@ -96,9 +96,13 @@ class Cache_Serveur:
     id : int
     capacite : int
     capacite_occupe: int = 0
+    importance : float = 0
+    importance_divise: float = 0
     endpoints : list = field(default_factory=list)
     videos : list = field(default_factory=list)
 
+    def importance_divise_fonction(self, importance_somme):
+        self.importance_divise = self.importance / importance_somme
 
     def suppression_requete(self, video_id, endpoint_id):
         self.requetes_liste = [requete for requete in self.requetes_liste if
@@ -124,6 +128,7 @@ class Cache_Serveur:
 
             # On fait la différence de la latence au datacenter et au cache serveur pondéré par le gain totale des vidéos
             importance += (endpoint.latence_datacenter_divise_LD - endpoint.getter_latence_aux_caches_serveurs_divise(self.id)) * video_rapport
+        self.importance = importance
         return importance
 
 @dataclass

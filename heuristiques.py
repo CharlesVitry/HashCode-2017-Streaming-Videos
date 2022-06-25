@@ -112,64 +112,43 @@ def gloutonneDeprecated(capacite_stockage, videos_liste, endpoints_liste, cache_
         cache_serveurs_decroissant = cache_serveur_liste
 
 
-    # On parcours chacun des caches serveurs
-    for cache_serveur in cache_serveurs_decroissant:
+    ###########################
+    # Méthode 1  on ajoute les vidéos par une probabilité proportionnelle à leur gain
+    ###########################
 
-        # On calcul un gain ponderé sur chacune des vidéos pouvant entrer dans le cache serveur
-        # le dictionnaire a l'id de la vidéo et le gain associé à elle
-        gain_videos = {}
-        for endpoint in cache_serveur.endpoints:
-            for requete in endpoint.requetes_liste_a_traite:
+    if GRASP:
 
-                video = videos_liste[requete.video_id]
-                gain_latence_pondere = (endpoint.latence_datacenter_divise_LD - endpoint.getter_latence_aux_caches_serveurs_divise(cache_serveur.id)) * video.rapport_divise(endpoint.id)
+        somme_importance_caches = sum([cache_serveur.importance for cache_serveur in cache_serveurs_decroissant ])
 
-
-                # Si la vidéo est déjà dans la liste des gains,
-                #on ajoute le gain sinon on affecte le gain actuel.
-                if requete.video_id in gain_videos:
-                    gain_videos[requete.video_id] += gain_latence_pondere
-                else:
-                    gain_videos[requete.video_id] = gain_latence_pondere
+        for cache_serveur in cache_serveurs_decroissant:
+            cache_serveur.importance_divise_fonction(somme_importance_caches)
 
 
-        ###
-        # Méthode 1 d'ajout
-        #Si l'on choisit d'ajouter les vidéos directement par leurs gains pondérés
-        if not GRASP:
-            # On ordonne les gains de vidéos de façon décroissante
-            videos_ordonnees_decroissantes_par_gain = sorted(gain_videos.items(), key=lambda x: -x[1])
 
-            # On ajouter les vidéos dans le cache serveur tant qu'il y a de la place
-            poid_actuel_cache_serveur = 0
-            for (i, gain) in videos_ordonnees_decroissantes_par_gain:
 
-                # Inutile d'ajouter les gains à 0,
-                # on arrete la boucle dès que la première vidéo à gain à 0 apparait
 
-                if gain == 0:
-                    break
 
-                video = videos_liste[i]
+        # On parcours chacun des caches serveurs
+        for cache_serveur in cache_serveurs_decroissant:
 
-                # On vérifie qu'il y a la place nécessaire pour mettre la vidéo
-                if (poid_actuel_cache_serveur + video.poid <= capacite_stockage):
+            # On calcul un gain ponderé sur chacune des vidéos pouvant entrer dans le cache serveur
+            # le dictionnaire a l'id de la vidéo et le gain associé à elle
+            gain_videos = {}
+            for endpoint in cache_serveur.endpoints:
+                for requete in endpoint.requetes_liste_a_traite:
 
-                    # Actualisation du poid occupé du cache serveur
-                    poid_actuel_cache_serveur += video.poid
+                    video = videos_liste[requete.video_id]
+                    gain_latence_pondere = (endpoint.latence_datacenter_divise_LD - endpoint.getter_latence_aux_caches_serveurs_divise(cache_serveur.id)) * video.rapport_divise(endpoint.id)
 
-                    # Ajout de la vidéo dans la liste du cache serveur
-                    cache_serveur.ajout_video(video)
 
-                    # On supprimme les requetes correspondantes à la vidéo sur
-                    # les endpoints connecté au cache serveur
-                    if nettoyage_requetes_video:
-                        for endpoint in cache_serveur.endpoints:
-                            endpoint.supp_requete_traite(video.id)
-        ###
-        # Méthode 2 d'ajout
-        # Si l'on ajoute les vidéos par une probabilité proportionnelle à leur gain
-        else:
+                    # Si la vidéo est déjà dans la liste des gains,
+                    #on ajoute le gain sinon on affecte le gain actuel.
+                    if requete.video_id in gain_videos:
+                        gain_videos[requete.video_id] += gain_latence_pondere
+                    else:
+                        gain_videos[requete.video_id] = gain_latence_pondere
+
+
             somme_gain = sum(gain_videos.values() )**alphaGRASP
             probabilite_par_video = {i: (gain**alphaGRASP)/somme_gain for i, gain in gain_videos.items()}
 
@@ -209,11 +188,64 @@ def gloutonneDeprecated(capacite_stockage, videos_liste, endpoints_liste, cache_
 
 
 
+    else:
+        # On parcours chacun des caches serveurs
+        for cache_serveur in cache_serveurs_decroissant:
+
+            # On calcul un gain ponderé sur chacune des vidéos pouvant entrer dans le cache serveur
+            # le dictionnaire a l'id de la vidéo et le gain associé à elle
+            gain_videos = {}
+            for endpoint in cache_serveur.endpoints:
+                for requete in endpoint.requetes_liste_a_traite:
+
+                    video = videos_liste[requete.video_id]
+                    gain_latence_pondere = (
+                                                       endpoint.latence_datacenter_divise_LD - endpoint.getter_latence_aux_caches_serveurs_divise(
+                                                   cache_serveur.id)) * video.rapport_divise(endpoint.id)
+
+                    # Si la vidéo est déjà dans la liste des gains,
+                    # on ajoute le gain sinon on affecte le gain actuel.
+                    if requete.video_id in gain_videos:
+                        gain_videos[requete.video_id] += gain_latence_pondere
+                    else:
+                        gain_videos[requete.video_id] = gain_latence_pondere
+
+
+            # On ordonne les gains de vidéos de façon décroissante
+            videos_ordonnees_decroissantes_par_gain = sorted(gain_videos.items(), key=lambda x: -x[1])
+
+            # On ajouter les vidéos dans le cache serveur tant qu'il y a de la place
+            poid_actuel_cache_serveur = 0
+            for (i, gain) in videos_ordonnees_decroissantes_par_gain:
+
+                # Inutile d'ajouter les gains à 0,
+                # on arrete la boucle dès que la première vidéo à gain à 0 apparait
+
+                if gain == 0:
+                    break
+
+                video = videos_liste[i]
+
+                # On vérifie qu'il y a la place nécessaire pour mettre la vidéo
+                if (poid_actuel_cache_serveur + video.poid <= capacite_stockage):
+
+                    # Actualisation du poid occupé du cache serveur
+                    poid_actuel_cache_serveur += video.poid
+
+                    # Ajout de la vidéo dans la liste du cache serveur
+                    cache_serveur.ajout_video(video)
+
+                    # On supprimme les requetes correspondantes à la vidéo sur
+                    # les endpoints connecté au cache serveur
+                    if nettoyage_requetes_video:
+                        for endpoint in cache_serveur.endpoints:
+                            endpoint.supp_requete_traite(video.id)
+
+
+
     return cache_serveur_liste
 
-def preparation_donnees_gloutonne():
-    None
-
+"""
 def gloutonne_nouvelle(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_liste, requetes_liste,
                         classementCache, nettoyage_requetes_video, GRASP, alphaGRASP, nombre_de_video_a_ajoute_par_cache):
 
@@ -275,7 +307,6 @@ def gloutonne_nouvelle(capacite_stockage, videos_liste, endpoints_liste, cache_s
             videos_ordonnees_decroissantes_par_gain = sorted(gain_videos.items(), key=lambda x: -x[1])
 
             # On ajouter les vidéos dans le cache serveur tant qu'il y a de la place
-            poid_actuel_cache_serveur = 0
             for (i, gain) in videos_ordonnees_decroissantes_par_gain:
 
                 # Inutile d'ajouter les gains à 0,
@@ -303,15 +334,15 @@ def gloutonne_nouvelle(capacite_stockage, videos_liste, endpoints_liste, cache_s
                             # de la liste des endpoints connecté au cache server
                             endpoint.supp_requete_traite(video.id)
                             # La liste des requetes de la vidéo sur ces endpoints
-                            #video.supp_requete( endpoint.id) Inutile
+                            #video.supp_requete( endpoint.id) #Inutile
                             # De la liste globale
                             #requetes_liste = [requete for requete in requetes_liste if requete.endpoint_id != endpoint.id and requete.video_id != video.id]
-
-
-
-
-
                     break
+
+
+
+
+
         ###
         # Méthode 2 d'ajout
         # Si l'on ajoute les vidéos par une probabilité proportionnelle à leur gain
@@ -319,8 +350,6 @@ def gloutonne_nouvelle(capacite_stockage, videos_liste, endpoints_liste, cache_s
             somme_gain = sum(gain_videos.values()) ** alphaGRASP
             probabilite_par_video = {i: (gain ** alphaGRASP) / somme_gain for i, gain in gain_videos.items()}
 
-            # On ajouter les vidéos dans le cache serveur tant qu'il y a de la place
-            poid_actuel_cache_serveur = 0
             # On parcours l'ensemble des vidéos apte à rentrer dans le cache serveur
             for x in probabilite_par_video:
 
@@ -335,10 +364,10 @@ def gloutonne_nouvelle(capacite_stockage, videos_liste, endpoints_liste, cache_s
                     if somme_proba > nombre_hasard:
                         video = videos_liste[i]
                         # On vérifie qu'il y a la place nécessaire pour mettre la vidéo
-                        if (poid_actuel_cache_serveur + video.poid <= capacite_stockage):
+                        if (cache_serveur.capacite_occupe + video.poid <= capacite_stockage):
 
                             # Actualisation du poid occupé du cache serveur
-                            poid_actuel_cache_serveur += video.poid
+                            cache_serveur.capacite_occupe += video.poid
                             # print(poid_actuel_cache_serveur)
 
                             # Ajout de la vidéo dans la liste du cache serveur
@@ -352,8 +381,6 @@ def gloutonne_nouvelle(capacite_stockage, videos_liste, endpoints_liste, cache_s
                                     endpoint.supp_requete_traite(video.id)
 
                         break
-
-    print(nombre_videos_ajoutes)
     if nombre_videos_ajoutes == 0:
         return cache_serveur_liste
     else:
@@ -365,7 +392,7 @@ def gloutonne_nouvelle(capacite_stockage, videos_liste, endpoints_liste, cache_s
         alphaGRASP = alphaGRASP,
         nombre_de_video_a_ajoute_par_cache = nombre_de_video_a_ajoute_par_cache +1
     ))
-
+"""
 
 def trajectory(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_liste, requetes_liste) :
 
