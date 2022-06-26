@@ -116,7 +116,52 @@ def recupération_resabilite_solution(cash_serveur_liste_solution, capacite_stoc
 
     return cash_serveur_liste_solution
 
+def amelioration_solution(cash_serveur_liste_solution, capacite_stockage,donnees_entrees):
+
+    #Récupération de la résabilité de la solution
+    recupération_resabilite_solution(cash_serveur_liste_solution, capacite_stockage)
+
+    #Application de l'algo glouton dessus
+    gloutonneDeprecated(
+        capacite_stockage,
+        donnees_entrees.videos_liste,
+        donnees_entrees.endpoints_liste,
+        cash_serveur_liste_solution,
+        donnees_entrees.requetes_liste,
+        classementCache=True,
+        nettoyage_requetes_video=True,
+        GRASP=False,
+        alphaGRASP=1)
+
+    #Application d'une amélioration par recherche local
+    pass
+
+def distance_entre_deux_solutions(cash_serveur_liste_solution1, cash_serveur_liste_solution2):
+    distance_euclidienne = 0
+    for (cache_serveur_solution1,cache_serveur_solution2) in zip(cash_serveur_liste_solution1,cash_serveur_liste_solution2):
+        for  (solution1, solution2) in zip(cache_serveur_solution1.dict_videos,cache_serveur_solution2.dict_videos ) :
+            if solution1 != solution2 :
+                distance_euclidienne+= 1
+
+    print(distance_euclidienne)
+    return distance_euclidienne
 
 
-def scatter_search():
-    None
+
+def scatter_search(Fichier_a_traite, nbre_solution_genere_init,GRASP_generation ):
+    donnees_entrees = lecture_fichier_entree(Fichier_a_traite)
+
+    #Génération aléatoire de solutions
+    ListeSolutions = generation_solution_diversifies(Fichier_a_traite,nbre_solution_genere_init,GRASP_generation )
+
+    #Appel de la fonction d'amélioration
+    for solution in ListeSolutions:
+        amelioration_solution(solution, donnees_entrees.capacite_stockage,donnees_entrees)
+
+    distance_entre_deux_solutions(ListeSolutions[0], ListeSolutions[1])
+
+    return ListeSolutions
+
+
+
+

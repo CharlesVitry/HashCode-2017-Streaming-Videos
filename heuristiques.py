@@ -94,8 +94,8 @@ def gloutonneDeprecated(capacite_stockage, videos_liste, endpoints_liste, cache_
 
     #Dans le cas d'une solution déjà présente,
     #On vide la liste de vidéos déjà affectés au cache serveur
-    for cache_serveur in cache_serveur_liste:
-        cache_serveur.videos = []
+    # for cache_serveur in cache_serveur_liste:
+    #     cache_serveur.videos = []
 
     #On commence par copié la liste des requetes des endpoints, en effet, une fois traité
     # on supprimmera la requête pour recalculer le gain sur les endpoints
@@ -247,7 +247,9 @@ def gloutonneDeprecated(capacite_stockage, videos_liste, endpoints_liste, cache_
                         for endpoint in cache_serveur.endpoints:
                             endpoint.supp_requete_traite(video.id)
 
-
+    #On créé le dictionnaire
+    for cache_serveur in cache_serveur_liste:
+        cache_serveur.construction_dict(videos_liste).videos_liste_a_dict()
 
     return cache_serveur_liste
 
