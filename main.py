@@ -7,6 +7,8 @@ from fonction_objective import *
 from donnees_modeles import *
 import numpy as np
 import time
+from art import tprint
+import matplotlib.pyplot as plt
 
 ########################
 # Configuration
@@ -37,9 +39,9 @@ def exec(Fichier_a_traite):
     print("UB : ", UB)
 
 
-    UBLagrange = borne_sup_lagrangienne(donnees_heuristique.nbre_cache_serveur,
-                                        donnees_heuristique.nbre_requetes,
-                                        donnees_heuristique.cache_serveur_liste)
+    #UBLagrange = borne_sup_lagrangienne(donnees_heuristique.nbre_cache_serveur,
+                                        #donnees_heuristique.nbre_requetes,
+                                        #donnees_heuristique.cache_serveur_liste)
     
     date_debut_heuristique = time.time()
 
@@ -58,8 +60,9 @@ def exec(Fichier_a_traite):
 
     
     #Vérification de la validité de la solution produite
-    Validite_De_La_Solution(HeuristiqueGloutonne, donnees_entrees.cache_serveur_liste,     donnees_entrees.capacite_stockage )
-
+    Validite_De_La_Solution(HeuristiqueGloutonne, donnees_entrees.cache_serveur_liste, donnees_entrees.capacite_stockage,
+                            Fichier_a_traite, donnees_entrees.requetes_liste,
+                            donnees_entrees.endpoints_liste, donnees_entrees.videos_liste )
     # Calcul du Score Obtenu
     EvalHeuristiqueGloutonne = evaluation_heuristique(HeuristiqueGloutonne, donnees_entrees.requetes_liste, donnees_entrees.endpoints_liste,
                                donnees_entrees.videos_liste)
@@ -76,7 +79,9 @@ def exec(Fichier_a_traite):
     
     
     #Vérification de la validité de la solution produite
-    Validite_De_La_Solution(LocalSearch, donnees_entrees.cache_serveur_liste,     donnees_entrees.capacite_stockage )
+    Validite_De_La_Solution(LocalSearch, donnees_entrees.cache_serveur_liste, donnees_entrees.capacite_stockage,
+                            Fichier_a_traite, donnees_entrees.requetes_liste,
+                            donnees_entrees.endpoints_liste, donnees_entrees.videos_liste )
 
     # Calcul du Score Obtenu
     EvalLocalSearch = evaluation_heuristique(LocalSearch, donnees_entrees.requetes_liste, donnees_entrees.endpoints_liste,
@@ -93,13 +98,15 @@ def exec(Fichier_a_traite):
     return tab
 
 if __name__ == '__main__':
-    print("Lancement ! \n================== \nStatistiques d'Exécution \n")
+    tprint("Projet M1 \nTItre")
+    print("Lancement ! \n================================================== \nStatistiques d'Exécution \n")
+    
     Latence_totale_sauve = []
     Latence_totale_sauve.append(exec("Instances_de_Test/me_at_the_zoo.in"))
-    #Latence_totale_sauve.append(exec("Instances_de_Test/trending_today.in"))
+    Latence_totale_sauve.append(exec("Instances_de_Test/trending_today.in"))
     #Latence_totale_sauve.append(exec("Instances_de_Test/videos_worth_spreading.in"))
 
-    print("\nLatence totale sauvé sur les 3 fichiers : ", (Latence_totale_sauve)," \n================== ")
+    print("\nLatence totale sauvé sur les 3 fichiers : ", (Latence_totale_sauve)," \n==================================================  ")
 
 
     #########

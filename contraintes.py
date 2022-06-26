@@ -1,8 +1,15 @@
 import warnings
 from statistics import mean, median
+import pandas as pd
+from art import tprint
+import matplotlib.pyplot as plt
+from tabulate import tabulate
+from fonction_objective import *
+
+plt.rcParams.update({'figure.figsize':(7,5), 'figure.dpi':100})
 
 # Contrôle de réalisabilité
-def Validite_De_La_Solution(cache_serveur_liste_solution,cache_serveur_liste, capacite_stockage ):
+def Validite_De_La_Solution(cache_serveur_liste_solution,cache_serveur_liste, capacite_stockage, Fichier_a_traite, requetes_liste, endpoints_liste, videos_liste ):
     Validite = True
 
     if not contrainte1(cache_serveur_liste_solution,capacite_stockage):
@@ -31,6 +38,7 @@ def Validite_De_La_Solution(cache_serveur_liste_solution,cache_serveur_liste, ca
                       "La vidéo n'a pas de requetes sur les endpoints de ce cache serveur ")
         Validite =  False
 
+    affichage(cache_serveur_liste_solution, Fichier_a_traite, capacite_stockage, requetes_liste, endpoints_liste, videos_liste)
     return Validite
 
 def contrainte1(cache_serveur_liste_solution,capacite_stockage):
@@ -39,22 +47,7 @@ def contrainte1(cache_serveur_liste_solution,capacite_stockage):
     for cache_serveur in cache_serveur_liste_solution:
         #Si la somme du poid des vidéos est supérieur à la capacité du cache serveur alors la contrainte n'est pas respectée
         liste_remplissage.append( sum([video.poid for video in cache_serveur.videos]) / capacite_stockage )
-
-    #On affiche des statistiques à partir de la liste de remplissage obtenu
-    print("Moyenne de remplissage cache serveur : ", mean(liste_remplissage)*100," %",
-          "\nMédianne de remplissage cache serveur : ",median(liste_remplissage)*100," %",
-          "\nMinimum de remplissage cache serveur : ",min(liste_remplissage)*100," %",
-          "\nMaximum de remplissage cache serveur : ",max(liste_remplissage)*100," %")
-
-
-    #TEST CLOCLO
-    #for cache_serveur in cache_serveur_liste_solution :
-     #   print(cache_serveur.id)
-     #   print(sum([video.poid for video in cache_serveur.videos]))
-     #   print([video.poid for video in cache_serveur.videos])
-     #   print([video.id for video in cache_serveur.videos])
-
-    
+  
     #On déclare la contrainte 1 comme non satisfaite si l'un des cache serveur est rempli à plus de 100%
     if any( remplissage > 1 for remplissage in liste_remplissage  ):
         return False
@@ -99,3 +92,51 @@ def contrainte5(cache_serveur_liste_solution, cache_serveur_liste ):
             return False
 
     return True
+
+
+def affichage(cache_serveur_liste_solution, Fichier_a_traite, capacite_stockage, requetes_liste, endpoints_liste, videos_liste):
+
+    print("Instance en cours : ", Fichier_a_traite[18:])
+    print("Modèle : ", "...")
+    print("")
+
+    liste_remplissage = []
+    for cache_serveur in cache_serveur_liste_solution:
+        liste_remplissage.append( sum([video.poid for video in cache_serveur.videos]) / capacite_stockage )
+    print("Moyenne de remplissage cache serveur : ", mean(liste_remplissage)*100," %",
+          "\nMédianne de remplissage cache serveur : ",median(liste_remplissage)*100," %",
+          "\nMinimum de remplissage cache serveur : ",min(liste_remplissage)*100," %",
+          "\nMaximum de remplissage cache serveur : ",max(liste_remplissage)*100," %",
+          "\n")
+    
+    tab_id = []
+    tab_stockage = []
+    
+    for cache_serveur in cache_serveur_liste_solution :
+        tab_id.append(cache_serveur.id)
+        tab_stockage.append(cache_serveur.capacite_occupe)
+        
+    df = pd.DataFrame([tab_stockage], columns = tab_id)
+    df.rename(index={0 : 'MO pris'}, inplace=True)
+
+    if (len(df.columns) < 20 ):
+        print(tabulate(df, headers = 'keys', tablefmt = 'psql'))
+    else :
+        print("To many data")
+
+
+
+    score = evaluation_heuristique(cache_serveur_liste_solution, requetes_liste, endpoints_liste,
+                               videos_liste)
+    print("Gain total / Score : ", score)
+  
+    filter_good = (df >= 90).any()
+    df_good = df.loc[:, filter_good]
+    filter_moyen = ((df < 90) & (df>70)).any()
+    df_moyen = df.loc[:, filter_moyen]
+    filter_bad = (df <= 70).any()
+    df_bad = df.loc[:, filter_bad]
+
+    
+    
+    print("")
