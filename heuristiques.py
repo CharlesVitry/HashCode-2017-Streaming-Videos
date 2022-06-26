@@ -400,42 +400,42 @@ def gloutonne_nouvelle(capacite_stockage, videos_liste, endpoints_liste, cache_s
     ))
 """
 
-def trajectory(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_liste, requetes_liste) :
-
-    # Dans le cas d'une solution déjà présente,
-    # On vide la liste de vidéos déjà affectés au cache serveur
-    for cache_serveur in cache_serveur_liste:
-        cache_serveur.videos = []
-
-    #On copie la liste des requetes original
-    for endpoint in endpoints_liste:
-        endpoint.requetes_liste_a_traite = endpoint.requetes_liste
-
-
-    # 1ere étape : création d'une solution ne respectant pas la contrainte de capacités
-    cache_serveur_liste = gloutonne(
-        capacite_stockage * 1000,
-        videos_liste,
-        endpoints_liste,
-        cache_serveur_liste,
-        requetes_liste,
-        True,
-        False,
-        False,
-        1)
-    # 2eme étape : amélioration de la solution trouvée
-
-    liste_remplissage = []
-    for cache_serveur in cache_serveur_liste:
-        liste_remplissage.append( sum([video.poid for video in cache_serveur.videos]) / capacite_stockage )
-    if all( remplissage < 1 for remplissage in liste_remplissage  ):       
-        return cache_serveur_liste        
-
-
-    ##### MODIF SOLUCE
-    # > changement / poid de la VIDEO pas QS
-    
-    return cache_serveur_liste
+# def trajectory(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_liste, requetes_liste) :
+#
+#     # Dans le cas d'une solution déjà présente,
+#     # On vide la liste de vidéos déjà affectés au cache serveur
+#     for cache_serveur in cache_serveur_liste:
+#         cache_serveur.videos = []
+#
+#     #On copie la liste des requetes original
+#     for endpoint in endpoints_liste:
+#         endpoint.requetes_liste_a_traite = endpoint.requetes_liste
+#
+#
+#     # 1ere étape : création d'une solution ne respectant pas la contrainte de capacités
+#     cache_serveur_liste = gloutonne(
+#         capacite_stockage * 1000,
+#         videos_liste,
+#         endpoints_liste,
+#         cache_serveur_liste,
+#         requetes_liste,
+#         True,
+#         False,
+#         False,
+#         1)
+#     # 2eme étape : amélioration de la solution trouvée
+#
+#     liste_remplissage = []
+#     for cache_serveur in cache_serveur_liste:
+#         liste_remplissage.append( sum([video.poid for video in cache_serveur.videos]) / capacite_stockage )
+#     if all( remplissage < 1 for remplissage in liste_remplissage  ):
+#         return cache_serveur_liste
+#
+#
+#     ##### MODIF SOLUCE
+#     # > changement / poid de la VIDEO pas QS
+#
+#     return cache_serveur_liste
 
 
 def try_local_search(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_liste, requetes_liste) :

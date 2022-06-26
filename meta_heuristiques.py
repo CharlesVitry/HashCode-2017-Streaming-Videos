@@ -33,62 +33,89 @@ def generation_solution_diversifies(fichier_entree,nombre_solutions, Utilisation
 
         #Si l'on choisit de générer les solutions avec GRASP
         else:
-            None
+            solution_simple = gloutonneDeprecated(
+         solution_simple_input.capacite_stockage,
+         solution_simple_input.videos_liste,
+         solution_simple_input.endpoints_liste,
+         solution_simple_input.cache_serveur_liste,
+         solution_simple_input.requetes_liste,
+        classementCache = True,
+        nettoyage_requetes_video =  True,
+        GRASP =    True,
+        alphaGRASP = 1)
+            solution_complementaire = gloutonneDeprecated(
+         solution_complementaire_input.capacite_stockage,
+         solution_complementaire_input.videos_liste,
+         solution_complementaire_input.endpoints_liste,
+         solution_complementaire_input.cache_serveur_liste,
+         solution_complementaire_input.requetes_liste,
+        classementCache = True,
+        nettoyage_requetes_video =  True,
+        GRASP =    True,
+        alphaGRASP = 1)
 
+            #On en déduit le dictionnaire
+            for cache_serveur in solution_simple:
+                cache_serveur.construction_dict(solution_simple_input.videos_liste).videos_liste_a_dict()
+
+            for cache_serveur in solution_complementaire:
+                cache_serveur.construction_dict(solution_complementaire_input.videos_liste).videos_liste_a_dict()
+
+
+            liste_solutions_generees.append(solution_simple)
+            liste_solutions_generees.append(solution_complementaire)
 
     return liste_solutions_generees
 
 def recupération_resabilite_solution(cash_serveur_liste_solution, capacite_stockage):
-    for cash_serveur in cash_serveur_liste_solution:
+    for cache_serveur in cash_serveur_liste_solution:
 
-        #Si un cache serveur est complet alors on l'épure
+        #Si un cache serveur est complet alors on retire des vidéos tant qu'il est plein
         if sum([video.poid for video in cache_serveur.videos]) > capacite_stockage:
-           #On calculs le ratio de chaque video dans le cache serveur
+            #On calculs le ratio de chaque video dans le cache serveur
             ratio_video = {}
+
             for endpoint in cache_serveur.endpoints:
-                for requete in endpoint.requetes_liste_a_traite:
+                for requete in endpoint.requetes_liste:
+                    #Si la requete correspond à une video présente dans le cache, on l'ajoute à la liste des ratios
+                    if cache_serveur.dict_videos[requete.video_id]:
 
-                    video = videos_liste[requete.video_id]
-                    gain_latence_pondere = (
-                                                   endpoint.latence_datacenter_divise_LD - endpoint.getter_latence_aux_caches_serveurs_divise(
-                                               cache_serveur.id)) * video.rapport_divise(endpoint.id)
+                        video = objet_par_id(cache_serveur.videos, requete.video_id)[0]
 
-                    # Si la vidéo est déjà dans la liste des gains,
-                    # on ajoute le gain sinon on affecte le gain actuel.
-                    if requete.video_id in ratio_video:
-                        ratio_video[requete.video_id] += gain_latence_pondere
-                    else:
-                        ratio_video[requete.video_id] = gain_latence_pondere
+                        #video = cache_serveur.videos[requete.video_id]
+                        gain_latence_pondere = (endpoint.latence_datacenter_divise_LD - endpoint.getter_latence_aux_caches_serveurs_divise(
+                                                   cache_serveur.id)) * video.rapport_divise(endpoint.id)
+
+                        # Si la vidéo est déjà dans la liste des gains,
+                        # on ajoute le gain sinon on affecte le gain actuel.
+                        if requete.video_id in ratio_video:
+                            ratio_video[requete.video_id] += gain_latence_pondere
+                        else:
+                            ratio_video[requete.video_id] = gain_latence_pondere
+
 
             # On ordonne les gains de vidéos de façon décroissante
-            videos_ordonnees_decroissantes_par_gain = sorted(ratio_video.items(), key=lambda x: -x[1])
+            videos_ordonnees_croissantes_par_ratio = sorted(ratio_video.items(), key=lambda x: x[1])
 
-            # On ajouter les vidéos dans le cache serveur tant qu'il y a de la place
+            #On retire les vidéos, on break(arrete) quand le cache serveur a retrouvé sa résabilité
+            for (i, gain) in videos_ordonnees_croissantes_par_ratio:
+                video = objet_par_id(cache_serveur.videos, i)[0]
 
-            for (i, gain) in videos_ordonnees_decroissantes_par_gain:
+                # Actualisation du poid occupé du cache serveur
+                cache_serveur.capacite_occupe -= video.poid
 
-                # Inutile d'ajouter les gains à 0,
-                # on arrete la boucle dès que la première vidéo à gain à 0 apparait
+                # Suppression de la vidéo dans la liste du cache serveur
+                cache_serveur.suppression_video(video)
 
-                if gain == 0:
+                #Suppression dans le dictionnaire
+                cache_serveur.dict_videos[video.id] = False
+
+                #Si la capacité est respecté, on arrete
+                if (cache_serveur.capacite_occupe <= capacite_stockage):
                     break
 
-                video = videos_liste[i]
+    return cash_serveur_liste_solution
 
-                # On vérifie qu'il y a la place nécessaire pour mettre la vidéo
-                if (cache_serveur.capacite_occupe + video.poid <= capacite_stockage):
-
-                    # Actualisation du poid occupé du cache serveur
-                    cache_serveur.capacite_occupe += video.poid
-
-                    # Ajout de la vidéo dans la liste du cache serveur
-                    cache_serveur.ajout_video(video)
-
-                    # On supprimme les requetes correspondantes à la vidéo sur
-                    # les endpoints connecté au cache serveur
-                    if nettoyage_requetes_video:
-                        for endpoint in cache_serveur.endpoints:
-                            endpoint.supp_requete_traite(video.id)
 
 
 def scatter_search():

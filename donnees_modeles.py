@@ -119,6 +119,7 @@ class Cache_Serveur:
     def construction_dict(self, videos_liste):
         for video in videos_liste:
             self.dict_videos[video.id] = False
+        return self
 
     def videos_liste_a_dict(self):
         for video in self.videos:
@@ -145,6 +146,9 @@ class Cache_Serveur:
 
     def ajout_video(self, video):
         self.videos.append(video)
+
+    def suppression_video(self, video):
+        self.videos.remove(video)
 
     def importance_du_cache(self, videos):
         importance = 0
