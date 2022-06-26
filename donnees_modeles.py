@@ -85,9 +85,12 @@ class Endpoints:
     def getter_latence_aux_caches_serveurs_divise(self, cache_serveur_id):
         if cache_serveur_id in self.dict_latence_aux_caches_serveurs_divise:
             return self.dict_latence_aux_caches_serveurs_divise[cache_serveur_id]
+
         efficacite = [cache_serveur['latenceLc_divise'] for cache_serveur in self.latence_aux_caches_serveurs_divise if
                       cache_serveur_id == cache_serveur['id_cache_serveur']][0]
+
         self.dict_latence_aux_caches_serveurs_divise[cache_serveur_id] = efficacite
+
         return efficacite
 
     def supp_requete_traite(self, video_id):
@@ -96,7 +99,6 @@ class Endpoints:
 
     def ajout_requete(self, requete):
         self.requetes_liste.append(requete)
-
 
 @dataclass
 class Cache_Serveur:
@@ -108,6 +110,10 @@ class Cache_Serveur:
     endpoints: list = field(default_factory=list)
     videos: list = field(default_factory=list)
     dict_videos: dict = field(default_factory=dict)
+    dict_videos_score_scatter : dict = field(default_factory=dict)
+
+    def __eq__(self, other):
+        return self.id == other.id
 
     def remplissage_aleatoire_dict(self, videos_liste):
         dict_complementaire = {}
@@ -115,6 +121,11 @@ class Cache_Serveur:
             self.dict_videos[video.id] = bool(random.getrandbits(1))
             dict_complementaire[video.id] = not self.dict_videos[video.id]
         return dict_complementaire
+
+    def construction_dict_scatter(self, videos_liste):
+        for video in videos_liste:
+            self.dict_videos_score_scatter[video.id] = 0
+        return self
 
     def construction_dict(self, videos_liste):
         for video in videos_liste:
@@ -170,7 +181,7 @@ class Cache_Serveur:
 
 @dataclass
 class Requetes:
-    requete_id : int
+    requete_id: int
     video_id: int
     endpoint_id: int
     nombre_de_requetes: int

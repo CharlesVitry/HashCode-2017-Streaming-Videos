@@ -3,7 +3,8 @@ from heuristiques import *
 from contraintes import *
 from fonction_objective import *
 from donnees_modeles import *
-import random
+from operator import itemgetter
+from itertools import chain, combinations
 from copy import copy
 
 def generation_solution_diversifies(fichier_entree,nombre_solutions, UtilisationGRASP):
@@ -11,63 +12,48 @@ def generation_solution_diversifies(fichier_entree,nombre_solutions, Utilisation
     liste_solutions_generees = []
 
     #On génére un nombre défini de solutions
-    for x in range(int(nombre_solutions/2)):
-
+    for x in range(int(nombre_solutions)):
 
         solution_simple_input = lecture_fichier_entree(fichier_entree)
         solution_complementaire_input = lecture_fichier_entree(fichier_entree)
 
-        #Si on choisit de générer les solutions de manière purement aléatoire
-        if not UtilisationGRASP :
+        # #Si on choisit de générer les solutions de manière purement aléatoire
+        # if not UtilisationGRASP :
+        #
+        #     #On génère une solution simple et son complémentaire
+        #     for (cache_serveur, cache_serveur_complementaire) in zip(solution_simple_input.cache_serveur_liste,solution_complementaire_input.cache_serveur_liste):
+        #
+        #         cache_serveur_complementaire.dict_videos = cache_serveur.remplissage_aleatoire_dict(solution_simple_input.videos_liste)
+        #
+        #         cache_serveur.dictionnaire_a_liste_videos(solution_simple_input.videos_liste)
+        #         cache_serveur_complementaire.dictionnaire_a_liste_videos(solution_complementaire_input.videos_liste)
+        #
+        #     liste_solutions_generees.append(solution_simple_input.cache_serveur_liste)
+        #     liste_solutions_generees.append(solution_complementaire_input.cache_serveur_liste)
 
-            #On génère une solution simple et son complémentaire
-            for (cache_serveur, cache_serveur_complementaire) in zip(solution_simple_input.cache_serveur_liste,solution_complementaire_input.cache_serveur_liste):
-
-                cache_serveur_complementaire.dict_videos = cache_serveur.remplissage_aleatoire_dict(solution_simple_input.videos_liste)
-
-                cache_serveur.dictionnaire_a_liste_videos(solution_simple_input.videos_liste)
-                cache_serveur_complementaire.dictionnaire_a_liste_videos(solution_complementaire_input.videos_liste)
-
-            liste_solutions_generees.append(solution_simple_input.cache_serveur_liste)
-            liste_solutions_generees.append(solution_complementaire_input.cache_serveur_liste)
 
         #Si l'on choisit de générer les solutions avec GRASP
-        else:
-            solution_simple = gloutonneDeprecated(
-         solution_simple_input.capacite_stockage,
-         solution_simple_input.videos_liste,
-         solution_simple_input.endpoints_liste,
-         solution_simple_input.cache_serveur_liste,
-         solution_simple_input.requetes_liste,
-        classementCache = True,
-        nettoyage_requetes_video =  True,
-        GRASP =    True,
-        alphaGRASP = 1)
-            solution_complementaire = gloutonneDeprecated(
-         solution_complementaire_input.capacite_stockage,
-         solution_complementaire_input.videos_liste,
-         solution_complementaire_input.endpoints_liste,
-         solution_complementaire_input.cache_serveur_liste,
-         solution_complementaire_input.requetes_liste,
-        classementCache = True,
-        nettoyage_requetes_video =  True,
-        GRASP =    True,
-        alphaGRASP = 1)
-
-            #On en déduit le dictionnaire
-            for cache_serveur in solution_simple:
-                cache_serveur.construction_dict(solution_simple_input.videos_liste).videos_liste_a_dict()
-
-            for cache_serveur in solution_complementaire:
-                cache_serveur.construction_dict(solution_complementaire_input.videos_liste).videos_liste_a_dict()
+        solution_simple = gloutonneDeprecated(
+     solution_simple_input.capacite_stockage,
+     solution_simple_input.videos_liste,
+     solution_simple_input.endpoints_liste,
+     solution_simple_input.cache_serveur_liste,
+     solution_simple_input.requetes_liste,
+    classementCache = True,
+    nettoyage_requetes_video =  True,
+    GRASP =    True,
+    alphaGRASP = 1)
 
 
-            liste_solutions_generees.append(solution_simple)
-            liste_solutions_generees.append(solution_complementaire)
+        #On en déduit le dictionnaire
+        for cache_serveur in solution_simple:
+            cache_serveur.construction_dict(solution_simple_input.videos_liste).videos_liste_a_dict()
+
+        liste_solutions_generees.append(solution_simple)
 
     return liste_solutions_generees
 
-def recupération_resabilite_solution(cash_serveur_liste_solution, capacite_stockage):
+def recuperation_resabilite_solution(cash_serveur_liste_solution, capacite_stockage):
     for cache_serveur in cash_serveur_liste_solution:
 
         #Si un cache serveur est complet alors on retire des vidéos tant qu'il est plein
@@ -116,52 +102,159 @@ def recupération_resabilite_solution(cash_serveur_liste_solution, capacite_stoc
 
     return cash_serveur_liste_solution
 
-def amelioration_solution(cash_serveur_liste_solution, capacite_stockage,donnees_entrees):
-
+def amelioration_solution(cash_serveur_liste_solution, Fichier_a_traite):
+    donnees_entrees = lecture_fichier_entree(Fichier_a_traite)
     #Récupération de la résabilité de la solution
-    recupération_resabilite_solution(cash_serveur_liste_solution, capacite_stockage)
+    cash_serveur_liste_solution = recuperation_resabilite_solution(cash_serveur_liste_solution, donnees_entrees.capacite_stockage)
 
     #Application de l'algo glouton dessus
-    gloutonneDeprecated(
-        capacite_stockage,
-        donnees_entrees.videos_liste,
-        donnees_entrees.endpoints_liste,
-        cash_serveur_liste_solution,
-        donnees_entrees.requetes_liste,
+    cash_serveur_liste_solution =    gloutonneDeprecated(
+            donnees_entrees.capacite_stockage,
+            donnees_entrees.videos_liste,
+            donnees_entrees.endpoints_liste,
+            cash_serveur_liste_solution,
+            donnees_entrees.requetes_liste,
+            classementCache=True,
+            nettoyage_requetes_video=True,
+            GRASP=False,
+            alphaGRASP=1)
+
+    #Application d'une amélioration par recherche local
+    pass
+
+    return cash_serveur_liste_solution
+
+def distance_entre_deux_solutions(cash_serveur_liste_solution1, cash_serveur_liste_solution2):
+    distance_euclidienne = 0
+    for (cache_serveur_solution1,cache_serveur_solution2) in zip(cash_serveur_liste_solution1,cash_serveur_liste_solution2):
+        for key in cache_serveur_solution1.dict_videos:
+            if (key in cache_serveur_solution2.dict_videos and cache_serveur_solution1.dict_videos[key] == cache_serveur_solution2.dict_videos[key]):
+                distance_euclidienne += 1
+    return distance_euclidienne
+
+def selection_ensemble_reference(ListeSolutions,donnees_entrees, nbre_elementsB1):
+    liste_score = []
+    for solution in ListeSolutions:
+        score_solution = evaluation_heuristique(solution, donnees_entrees.requetes_liste,
+                                                          donnees_entrees.endpoints_liste,
+                                                          donnees_entrees.videos_liste)
+        liste_score.append([solution, score_solution])
+
+    # On supprimme les doublons
+    # liste_score  = list(set(liste_score))
+
+    #On trie la liste selon le score
+    liste_score = sorted(liste_score, key=itemgetter(1))
+
+    #On retient un nombre d'élement constituant les meilleurs solutions : notre ensemble de solutions élites
+    ListeSolutions = [element[0] for element in liste_score[0:nbre_elementsB1]]
+    #On créé la liste des élements non retenu pour sélectionner les élements avec le plus de distance à l'ensemble de référence actuel
+    #
+    # ListeSolutionNonRetenu = [element[0] for element in liste_score[nbre_elementsB1:-1]]
+    #
+    # ScoreDistance = []
+    # for solution in ListeSolutionNonRetenu:
+
+    return ListeSolutions
+
+def generation_combinaison(combinaison,Fichier_a_traite):
+
+    nouvelle_solution = lecture_fichier_entree(Fichier_a_traite)
+
+    nouvelle_solution.cache_serveur_liste = gloutonneDeprecated(
+        nouvelle_solution.capacite_stockage,
+        nouvelle_solution.videos_liste,
+        nouvelle_solution.endpoints_liste,
+        nouvelle_solution.cache_serveur_liste,
+        nouvelle_solution.requetes_liste,
         classementCache=True,
         nettoyage_requetes_video=True,
         GRASP=False,
         alphaGRASP=1)
 
-    #Application d'une amélioration par recherche local
-    pass
 
-def distance_entre_deux_solutions(cash_serveur_liste_solution1, cash_serveur_liste_solution2):
-    distance_euclidienne = 0
-    for (cache_serveur_solution1,cache_serveur_solution2) in zip(cash_serveur_liste_solution1,cash_serveur_liste_solution2):
-        for  (solution1, solution2) in zip(cache_serveur_solution1.dict_videos,cache_serveur_solution2.dict_videos ) :
-            if solution1 != solution2 :
-                distance_euclidienne+= 1
-
-    print(distance_euclidienne)
-    return distance_euclidienne
+    #Scores des solutions
+    scores_solution = []
+    for solution in combinaison:
+        scores_solution.append(evaluation_heuristique(solution, nouvelle_solution.requetes_liste,
+                                                          nouvelle_solution.endpoints_liste,
+                                                          nouvelle_solution.videos_liste))
+    somme_score = sum(scores_solution)
+    ratio_score_solution = [x / somme_score for x in scores_solution]
 
 
+    #Création d'une nouvelle solution par combinaison
+    for cache_serveur in nouvelle_solution.cache_serveur_liste:
+        cache_serveur.construction_dict_scatter(nouvelle_solution.videos_liste).construction_dict(nouvelle_solution.videos_liste)
+    #Affectation du score pour chaque présence d'une vidéo
+    numero_solution = 0
+    for solution in combinaison:
+        for (cache_serveur, cache_serveur_nouvelle_solution) in zip(solution, nouvelle_solution.cache_serveur_liste):
 
-def scatter_search(Fichier_a_traite, nbre_solution_genere_init,GRASP_generation ):
+            for id in cache_serveur.dict_videos:
+                if cache_serveur.dict_videos[id]:
+                    cache_serveur_nouvelle_solution.dict_videos_score_scatter[id] += ratio_score_solution[numero_solution]
+        numero_solution += 1
+
+    #On affecte les vidéos dans le cache serveur, si le score est supérieur à 0.5
+    for cache_serveur in nouvelle_solution.cache_serveur_liste:
+        for id in cache_serveur.dict_videos_score_scatter:
+            if cache_serveur.dict_videos_score_scatter[id] > 0.5:
+                cache_serveur.dict_videos[id] = True
+        cache_serveur.dictionnaire_a_liste_videos(nouvelle_solution.videos_liste)
+
+    return nouvelle_solution.cache_serveur_liste
+
+def toutes_combinaisons(Liste_solutions):
+    return chain(*map(lambda x: combinations(Liste_solutions, x), range(0, len(Liste_solutions) + 1)))
+
+def combinaison_solutions(Liste_solutions,Fichier_a_traite):
+
+    #On itère parmis toutes les combinaisons de cardinalité de 2 (pair) et supérieur
+    for combinaison in toutes_combinaisons(Liste_solutions):
+        if len(combinaison) > 1:
+
+            #On génére la solution
+            sous_solution = generation_combinaison(combinaison,Fichier_a_traite)
+
+            Liste_solutions.append(sous_solution)
+    return Liste_solutions
+
+
+def scatter_search(Fichier_a_traite, cardinalite_P,cardinalite_RefSet, GRASP_generation, nombre_iteration):
+    print("Scatter Search")
     donnees_entrees = lecture_fichier_entree(Fichier_a_traite)
 
     #Génération aléatoire de solutions
-    ListeSolutions = generation_solution_diversifies(Fichier_a_traite,nbre_solution_genere_init,GRASP_generation )
+    ListeSolutions = generation_solution_diversifies(Fichier_a_traite, cardinalite_P, GRASP_generation)
+    print("Nous possédons désormais l'ensemble P de solutions de cardinalité : ",len(ListeSolutions))
+
+    # Sélection de l'ensemble de référence
+    Ensemble_Reference = selection_ensemble_reference(ListeSolutions, donnees_entrees, cardinalite_RefSet)
+    print("Cardinalité Ensemble de référence : ", len(Ensemble_Reference))
+    i = 0
+    while i < nombre_iteration :
+        #Generation de solution combinaisons de solution de l'Ensemble de référence
+        ListeSolutionsGenere = combinaison_solutions(Ensemble_Reference,Fichier_a_traite)
+        #print("NBRE SOLUCE GENERE : ",len(ListeSolutionsGenere))
+
+        #Amélioration des solutions générés
+        ListeSolutions_Ameliorees = []
+        for solution in ListeSolutionsGenere:
+            #print(solution[0].videos)
+            ListeSolutions_Ameliorees.append(amelioration_solution(solution,Fichier_a_traite))
+
+        # On mets à jour l'ensemble de référence
+        Ensemble_Reference = selection_ensemble_reference(ListeSolutions_Ameliorees, donnees_entrees, cardinalite_RefSet)
+        #print("Cardinalité Ensemble de référence : ", len(Ensemble_Reference))
+
+        i += 1
+
 
     #Appel de la fonction d'amélioration
     for solution in ListeSolutions:
-        amelioration_solution(solution, donnees_entrees.capacite_stockage,donnees_entrees)
-
-    distance_entre_deux_solutions(ListeSolutions[0], ListeSolutions[1])
+        print(evaluation_heuristique(solution, donnees_entrees.requetes_liste,
+                                                          donnees_entrees.endpoints_liste,
+                                                          donnees_entrees.videos_liste))
 
     return ListeSolutions
-
-
-
-
