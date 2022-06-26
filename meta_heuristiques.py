@@ -120,7 +120,7 @@ def amelioration_solution(cash_serveur_liste_solution, Fichier_a_traite):
             alphaGRASP=1)
 
     #Application d'une amélioration par recherche local
-    pass
+    cash_serveur_liste_solution = try_local_search(donnees_entrees.capacite_stockage, donnees_entrees.videos_liste, donnees_entrees.endpoints_liste, cash_serveur_liste_solution, donnees_entrees.requetes_liste, True)
 
     return cash_serveur_liste_solution
 
@@ -132,7 +132,7 @@ def distance_entre_deux_solutions(cash_serveur_liste_solution1, cash_serveur_lis
                 distance_euclidienne += 1
     return distance_euclidienne
 
-def selection_ensemble_reference(ListeSolutions,donnees_entrees, nbre_elementsB1):
+def selection_ensemble_reference(ListeSolutions,donnees_entrees, nbre_elementsB1, B2):
     liste_score = []
     for solution in ListeSolutions:
         score_solution = evaluation_heuristique(solution, donnees_entrees.requetes_liste,
@@ -148,12 +148,21 @@ def selection_ensemble_reference(ListeSolutions,donnees_entrees, nbre_elementsB1
 
     #On retient un nombre d'élement constituant les meilleurs solutions : notre ensemble de solutions élites
     ListeSolutions = [element[0] for element in liste_score[0:nbre_elementsB1]]
-    #On créé la liste des élements non retenu pour sélectionner les élements avec le plus de distance à l'ensemble de référence actuel
-    #
-    # ListeSolutionNonRetenu = [element[0] for element in liste_score[nbre_elementsB1:-1]]
-    #
-    # ScoreDistance = []
-    # for solution in ListeSolutionNonRetenu:
+
+    if B2:
+        liste_distance = []
+        #On créé la liste des élements non retenu pour sélectionner les élements avec le plus de distance à l'ensemble de référence actuel
+        ListeSolutionNonRetenu = [element[0] for element in liste_score[nbre_elementsB1:-1]]
+
+        for solution in ListeSolutionNonRetenu:
+            somme_distance = sum(map(lambda x: distance_entre_deux_solutions(solution,x ), ListeSolutions))
+            liste_distance.append([solution,somme_distance])
+        # On trie la liste des distances
+        liste_distance = sorted(liste_distance, key=itemgetter(1))
+        nbre_elementsB2 = int(nbre_elementsB1/3)
+        ListeB2 = [element[0] for element in liste_distance[0:nbre_elementsB2]]
+        ListeSolutions += ListeB2
+
 
     return ListeSolutions
 
@@ -221,7 +230,7 @@ def combinaison_solutions(Liste_solutions,Fichier_a_traite):
     return Liste_solutions
 
 
-def scatter_search(Fichier_a_traite, cardinalite_P,cardinalite_RefSet, GRASP_generation, nombre_iteration):
+def scatter_search(Fichier_a_traite, cardinalite_P, cardinalite_RefSetB1, GRASP_generation, nombre_iteration,B2):
     print("Scatter Search")
     donnees_entrees = lecture_fichier_entree(Fichier_a_traite)
 
@@ -230,7 +239,7 @@ def scatter_search(Fichier_a_traite, cardinalite_P,cardinalite_RefSet, GRASP_gen
     print("Nous possédons désormais l'ensemble P de solutions de cardinalité : ",len(ListeSolutions))
 
     # Sélection de l'ensemble de référence
-    Ensemble_Reference = selection_ensemble_reference(ListeSolutions, donnees_entrees, cardinalite_RefSet)
+    Ensemble_Reference = selection_ensemble_reference(ListeSolutions, donnees_entrees, cardinalite_RefSetB1,B2)
     print("Cardinalité Ensemble de référence : ", len(Ensemble_Reference))
     i = 0
     while i < nombre_iteration :
@@ -245,16 +254,17 @@ def scatter_search(Fichier_a_traite, cardinalite_P,cardinalite_RefSet, GRASP_gen
             ListeSolutions_Ameliorees.append(amelioration_solution(solution,Fichier_a_traite))
 
         # On mets à jour l'ensemble de référence
-        Ensemble_Reference = selection_ensemble_reference(ListeSolutions_Ameliorees, donnees_entrees, cardinalite_RefSet)
+        Ensemble_Reference = selection_ensemble_reference(ListeSolutions_Ameliorees, donnees_entrees, cardinalite_RefSetB1,B2)
         #print("Cardinalité Ensemble de référence : ", len(Ensemble_Reference))
+
+        print("Score à l'itération ",i+1)
+        for solution in Ensemble_Reference:
+            print(evaluation_heuristique(solution, donnees_entrees.requetes_liste,
+                                         donnees_entrees.endpoints_liste,
+                                         donnees_entrees.videos_liste))
 
         i += 1
 
 
-    #Appel de la fonction d'amélioration
-    for solution in ListeSolutions:
-        print(evaluation_heuristique(solution, donnees_entrees.requetes_liste,
-                                                          donnees_entrees.endpoints_liste,
-                                                          donnees_entrees.videos_liste))
 
     return ListeSolutions
