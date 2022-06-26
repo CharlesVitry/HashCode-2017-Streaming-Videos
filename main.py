@@ -32,20 +32,14 @@ def exec(Fichier_a_traite):
     # BorneSuperieurGloutonne = borne_superieur_gloutonne(donnees_entrees.cache_serveur_liste,
     #                                 donnees_entrees.videos_liste)
 
-    UB = born_supp(donnees_heuristique.requetes_liste,
-                   donnees_heuristique.endpoints_liste,
-                   donnees_heuristique.cache_serveur_liste,
-                   donnees_heuristique.videos_liste)
+    UB = born_supp(donnees_entrees.requetes_liste,
+                   donnees_entrees.endpoints_liste,
+                   donnees_entrees.cache_serveur_liste,
+                   donnees_entrees.videos_liste)
+
     print("UB : ", UB)
+    print("")
 
-
-    #UBLagrange = borne_sup_lagrangienne(donnees_heuristique.nbre_cache_serveur,
-                                        #donnees_heuristique.nbre_requetes,
-                                        #donnees_heuristique.cache_serveur_liste)
-    
-    date_debut_heuristique = time.time()
-
-    
     #Application de l'heuristique
     HeuristiqueGloutonne = gloutonneDeprecated(
          donnees_heuristique.capacite_stockage,
@@ -83,28 +77,54 @@ def exec(Fichier_a_traite):
                             Fichier_a_traite, donnees_entrees.requetes_liste,
                             donnees_entrees.endpoints_liste, donnees_entrees.videos_liste )
 
-    # Calcul du Score Obtenu
+    #Calcul du Score Obtenu
     EvalLocalSearch = evaluation_heuristique(LocalSearch, donnees_entrees.requetes_liste, donnees_entrees.endpoints_liste,
                                donnees_entrees.videos_liste)
 
+
+
+    UBLagrange = borne_sup_lagrangienne(donnees_heuristique.nbre_cache_serveur,
+                                       donnees_heuristique.nbre_requetes,
+                                        donnees_heuristique.nbre_videos,
+                                    HeuristiqueGloutonne,
+                                        donnees_heuristique.requetes_liste,
+                                        donnees_heuristique.endpoints_liste)
+    print("Borne lagrangienne : ", round(UBLagrange, 2))
+    
     #Ecriture fichier sortie
     #ecriture_fichier_sortie(HeuristiqueGloutonne, Emplacement_Sorties + "Gloutonne.out")
-    tab = [EvalHeuristiqueGloutonne, EvalLocalSearch]
+    tab = [EvalHeuristiqueGloutonne, ""]
 
+    
+    
+    return tab
+
+if __name__ == '__main__':
+    tprint("Projet M1 \nOptimisation")
+    print("Lancement ! \n================================================== \nStatistiques d'Exécution \n")
+    
+    Latence_totale_sauve = []
+    date_debut_heuristique = time.time()
+    Latence_totale_sauve.append(exec("Instances_de_Test/me_at_the_zoo.in"))
     date_fin_heuristique = time.time()
     print("Temps d'éxécution de  l'heuristique : ",
         time.strftime("%H:%M:%S", time.gmtime(date_fin_heuristique - date_debut_heuristique)))
 
-    return tab
-
-if __name__ == '__main__':
-    tprint("Projet M1 \nTItre")
-    print("Lancement ! \n================================================== \nStatistiques d'Exécution \n")
+    print("\n================================================== \n")
     
-    Latence_totale_sauve = []
-    Latence_totale_sauve.append(exec("Instances_de_Test/me_at_the_zoo.in"))
+
+    date_debut_heuristique = time.time()
     Latence_totale_sauve.append(exec("Instances_de_Test/trending_today.in"))
-    #Latence_totale_sauve.append(exec("Instances_de_Test/videos_worth_spreading.in"))
+    print("Temps d'éxécution de  l'heuristique : ",
+        time.strftime("%H:%M:%S", time.gmtime(date_fin_heuristique - date_debut_heuristique)))
+
+    print("\n================================================== \n")
+    
+    date_debut_heuristique = time.time()
+    Latence_totale_sauve.append(exec("Instances_de_Test/videos_worth_spreading.in"))
+    print("Temps d'éxécution de  l'heuristique : ",
+        time.strftime("%H:%M:%S", time.gmtime(date_fin_heuristique - date_debut_heuristique)))
+
 
     print("\nLatence totale sauvé sur les 3 fichiers : ", (Latence_totale_sauve)," \n==================================================  ")
 

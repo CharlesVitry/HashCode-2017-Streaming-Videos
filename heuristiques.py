@@ -78,15 +78,54 @@ def born_supp(requetes_liste, endpoints_liste, cache_serveur_liste, videos_liste
     return UB
 
 
-def borne_sup_lagrangienne(nbre_cache_serveur, nbre_requetes, cache_serveur_liste):
+def get_decompo_lagrange(cache_serveur_liste_solution, requetes_liste, endpoints_liste, x, y, l):
+    somme_nombre_requete = 0
+    
+    
+    for requete in requetes_liste : 
+        somme_nombre_requete += requete.nombre_de_requetes
+    K = 1000 / somme_nombre_requete
+    
+    part1 = 0
+    part2 = 0
+    for requete in requetes_liste :
+        endpoint_requete = objet_par_id(endpoints_liste, requete.endpoint_id)[0]
+        latence_datacenter_LD = endpoint_requete.latence_datacenter_LD
+
+        cache_id_all = []
+        for cache_serveur in cache_serveur_liste_solution :
+            cache_id_all.append(cache_serveur.id)
+        liste_id_cache_du_endpoint = [i['id_cache_serveur'] for i in (endpoint_requete.latence_aux_caches_serveurs)]
+
+        for cache_serveur in liste_id_cache_du_endpoint:
+            if (cache_serveur in cache_id_all):
+                part1 -= K * (requete.nombre_de_requetes * (latence_datacenter_LD - endpoint_requete.getter_latence_aux_caches_serveurs(cache_serveur)) + l) * y[cache_serveur][endpoint_requete.id]
+                part2 += l * x[cache_serveur][requete.video_id]
+
+    UB_lagrange = part1 - part2
+    return UB_lagrange
+
+
+def borne_sup_lagrangienne(nbre_cache_serveur, nbre_requetes, nbre_videos, cache_serveur_liste_solution, requete_liste, endpoints_liste):
     y = np.zeros((nbre_cache_serveur, nbre_requetes))
-    for cache_serveur in cache_serveur_liste :
+    for cache_serveur in cache_serveur_liste_solution :
         for endpoint in cache_serveur.endpoints :
             for requete in endpoint.requetes_liste :
-                y[cache_serveur.id][requete.endpoint_id] = 1
-    print(y)
+                y[cache_serveur.id][requete.requete_id] = 1
+    
 
-    # Décomposition lagrangienne après dualisation
+    x = np.zeros((nbre_cache_serveur, nbre_videos))
+    for cache_serveur in cache_serveur_liste_solution :
+        for video in cache_serveur.videos :
+            x[cache_serveur.id][video.id] = 1
+    #print(x.shape)
+    #print(x)
+    #print(y.shape)
+    #print(y)
+
+    UB_lagrange = get_decompo_lagrange(cache_serveur_liste_solution, requete_liste, endpoints_liste, x, y, 1)
+    return UB_lagrange
+            
     
 
 def gloutonneDeprecated(capacite_stockage, videos_liste, endpoints_liste, cache_serveur_liste, requetes_liste,classementCache,nettoyage_requetes_video, GRASP, alphaGRASP):
@@ -469,14 +508,7 @@ def try_local_search(capacite_stockage, videos_liste, endpoints_liste, cache_ser
     for cache_serveur in cache_serveur_liste:
 
         poid_actuel_cache_serveur = sum([video.poid for video in cache_serveur.videos])
-
-        videos_id_du_cache_serveur = [video for video in cache_serveur.videos]
-        requetes = [endpoint.requetes_liste for endpoint in cache_serveur.endpoints]
-        videos_des_requetes_du_cache_serveur =   [ objet_par_id(videos_liste, requete.video_id) for requete in
-                                    [requetes_liste for requetes_liste in
-                             [requete for liste_requetes in requetes for requete in liste_requetes]]]
-
-                                        
+                                     
         liste_videos_in = [video for video in cache_serveur.videos]
         liste_videos_s = [video for video in videos_liste]
         
@@ -522,5 +554,19 @@ def try_local_search(capacite_stockage, videos_liste, endpoints_liste, cache_ser
                             poid_actuel_cache_serveur = cache_serveur.capacite_occupe - temps_video_poid + old_video_poid
                     else :
                         pass
+
+    
+    gloutonneDeprecated(
+        capacite_stockage,
+        videos_liste,
+        endpoints_liste,
+        cache_serveur_liste,
+        requetes_liste,
+        classementCache=True,
+        nettoyage_requetes_video=True,
+        GRASP=False,
+        alphaGRASP=1)
+
+                    
     return cache_serveur_liste
 

@@ -170,6 +170,7 @@ class Cache_Serveur:
 
 @dataclass
 class Requetes:
+    requete_id : int
     video_id: int
     endpoint_id: int
     nombre_de_requetes: int

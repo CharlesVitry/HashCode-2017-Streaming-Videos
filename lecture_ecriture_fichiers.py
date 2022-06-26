@@ -57,12 +57,13 @@ def lecture_fichier_entree(emplacement_fichier):
 
         #Création de la liste de requêtes
         requetes_liste = []
-
+        requete_id = 0
         for requete_actuel in lignes[ligne_actuel:]:
             [video_id, endpoint_id, nbre_de_demandes] = [int(x) for x in requete_actuel.split(' ')]
 
             #Création objet Requete
-            requete = Requetes(video_id, endpoint_id, nbre_de_demandes)
+            
+            requete = Requetes(requete_id, video_id, endpoint_id, nbre_de_demandes)
             video = videos_liste[video_id]
 
             #Sélectionner uniquement les vidéos qui peuvent rentrer dans un cache serveur à cette étape
@@ -71,7 +72,7 @@ def lecture_fichier_entree(emplacement_fichier):
                 video.ajout_requete(requete)
             endpoints_liste[endpoint_id].ajout_requete(requete)
             requetes_liste.append(requete)
-
+            requete_id += 1 
 
         return DonneesEntrees(nbre_videos,
                                 nbre_endpoints,
