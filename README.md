@@ -1,4 +1,4 @@
-# :floppy_disk: Qualification Hashcode2017 :floppy_disk:
+# :floppy_disk: Qualification Hashcode2017 : [Sujet](https://www.i3s.unice.fr/~garciar/teaching/hashcode2017prep/hashcode2017_qualification_task.pdf) :floppy_disk:
 
 ## Introduction
 
@@ -8,15 +8,15 @@ L'implémentation d'une **Scatter Search** (Population-Based Method) a nécessit
 
 ## GRASP
 
-![](Images_Formules/GRASP_Algo.png)
+![](Images_Formules/GRASP_Algo.png){width="490"}
 
 ## Recherche Locale
 
-![](Images_Formules/Recherche_Locale_Algo.png)
+![](Images_Formules/Recherche_Locale_Algo.png){width="450"}
 
 ## Borne supérieur Lagrangienne
 
-![](Images_Formules/Borne_Sup_Lagrangienne.png)
+![](Images_Formules/Borne_Sup_Lagrangienne.png){width="451"}
 
 ## Analyse Solution
 
@@ -27,7 +27,7 @@ Puis, on calcul le *score* selon la méthode fourni par l'énoncé : on pondère
 **Tableau des scores**
 
 | (méta)Heuristique                         | me_at_the_zoo | trending_today | videos_worth_spreading |
-|----------------------------|---------------|---------------|---------------|
+|-------------------------|----------------|----------------|----------------|
 | Borne Inférieur                           | 0             | 0              | 0                      |
 | Gloutonne                                 | 500000        | 500000         | 500000                 |
 | GRASP                                     | 500000        | 500000         | 500000                 |
